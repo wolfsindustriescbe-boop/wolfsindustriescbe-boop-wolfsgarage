@@ -1,0 +1,20 @@
+<header class="header">
+  <nav class="navbar">
+    <div class="logo">
+      <a href="{{ url_for('home') }}" class="brand-mark" aria-label="Wolfs Industries home">
+        <span>Wolfs Industries</span>
+      </a>
+    </div>
+    <form class="search-box" method="get" action="{{ url_for('home') }}">
+      <input name="q" value="{{ search|default('') }}" placeholder="Search products...">
+      <button type="submit" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </form>
+    <div class="nav-icons">
+      <a href="{{ url_for('home') }}"><i class="fa-solid fa-house"></i> <span>Home</span></a>
+      <a href="{{ url_for('wishlist') }}"><i class="fa-regular fa-heart"></i> <span>Wishlist</span></a>
+      <a href="{{ url_for('cart') }}"><i class="fa-solid fa-cart-shopping"></i> <span>Cart</span></a>
+      <a href="{{ url_for('user_orders') }}"><i class="fa-solid fa-box"></i> <span>Orders</span></a>
+      <a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> <span>Profile</span></a>
+    </div>
+  </nav>
+</header>

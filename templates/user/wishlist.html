@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Wishlist | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div><p class="eyebrow">Wishlist</p><h1>Saved Products</h1></div>
+    <a class="ghost-link" href="{{ url_for('home') }}">Continue shopping</a>
+  </div>
+  <div class="product-grid">
+    {% for item in wishlist_items %}
+      {% set product=item.product %}
+      {% include "includes/product_card.html" %}
+    {% else %}
+      <div class="empty-state"><h2>Your wishlist is empty</h2><a class="primary-action" href="{{ url_for('home') }}">Browse products</a></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

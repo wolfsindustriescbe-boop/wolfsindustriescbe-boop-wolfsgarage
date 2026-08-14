@@ -1,0 +1,1 @@
+<section class="products-section" id="featured-products"><div class="section-header"><h2>Featured Products</h2></div><div class="product-grid">{% for product in featured_products[:8] %}{% include "includes/product_card.html" %}{% else %}<p>No featured products available.</p>{% endfor %}</div></section>

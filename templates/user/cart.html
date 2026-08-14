@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Cart | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div>
+      <p class="eyebrow">Shopping cart</p>
+      <h1><span data-cart-heading-count>{{ cart_items|length }}</span> item{{ '' if cart_items|length == 1 else 's' }} in your cart</h1>
+    </div>
+    <a class="ghost-link" href="{{ url_for('home') }}">Continue shopping</a>
+  </div>
+
+  {% if cart_items %}
+    <div class="checkout-grid" id="cart-content">
+      <div class="commerce-stack" data-cart-list>
+        {% for item in cart_items %}
+          {% set product = item.product %}
+          <article class="cart-item" data-cart-item="{{ item.id }}">
+            <a class="cart-item__image" href="{{ url_for('product_detail', slug=product.slug) }}">
+              {% if product.main_image %}
+                <img src="{{ uploaded_url(product.main_image) }}" alt="{{ product.name }}" loading="lazy">
+              {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder.svg') }}" alt="{{ product.name }}" loading="lazy">
+              {% endif %}
+            </a>
+            <div class="cart-item__body">
+              <p class="muted">{{ product.brand.name if product.brand else 'Wolfs Industries' }}</p>
+              <h2><a href="{{ url_for('product_detail', slug=product.slug) }}">{{ product.name }}</a></h2>
+              <p>{{ 'In stock' if product.stock >= item.quantity else 'Limited stock' }} - Delivery by {{ delivery_date.strftime('%d %b %Y') }}</p>
+              <div class="price-row">
+                <strong>{{ (product.discount_price or product.price)|currency }}</strong>
+                {% if product.discount_price %}<del>{{ product.price|currency }}</del><span data-item-discount>{{ ((product.price - product.discount_price) * item.quantity)|currency }} off</span>{% endif %}
+              </div>
+              <div class="cart-actions">
+                <form method="post" action="{{ url_for('cart_update', item_id=item.id) }}" class="quantity-form" data-cart-action="update">
+                  <button type="button" data-quantity-step="-1" aria-label="Decrease quantity">-</button>
+                  <input type="number" min="1" max="{{ product.stock }}" name="quantity" value="{{ item.quantity }}" aria-label="Quantity" data-cart-quantity>
+                  <button type="button" data-quantity-step="1" aria-label="Increase quantity">+</button>
+                </form>
+                <form method="post" action="{{ url_for('cart_move_to_wishlist', item_id=item.id) }}" data-cart-action="wishlist"><button type="submit">Move to Wishlist</button></form>
+                <form method="post" action="{{ url_for('cart_remove', item_id=item.id) }}" data-cart-action="remove"><button type="submit" class="danger-link">Remove</button></form>
+              </div>
+              <p class="cart-item__message" data-cart-message></p>
+            </div>
+            <strong class="line-total" data-line-total>{{ ((product.discount_price or product.price) * item.quantity)|currency }}</strong>
+          </article>
+        {% endfor %}
+      </div>
+      <aside class="price-card" data-cart-summary>
+        <h2>Price Details</h2>
+        <div><span>Product Price</span><strong data-cart-product-total>{{ totals.product_total|currency }}</strong></div>
+        <div><span>Discount</span><strong class="success" data-cart-discount>-{{ totals.discount|currency }}</strong></div>
+        <div><span>Subtotal</span><strong data-cart-subtotal>{{ totals.subtotal|currency }}</strong></div>
+        <div><span>Delivery Fee</span><strong data-cart-delivery>{{ totals.delivery_charge|delivery_display }}</strong></div>
+        <div class="grand-total"><span>Total Payable</span><strong data-cart-total>{{ totals.total|currency }}</strong></div>
+        <a class="primary-action" href="{{ url_for('checkout') }}">Proceed to Checkout</a>
+      </aside>
+    </div>
+  {% else %}
+    <div class="empty-state" data-cart-empty>
+      <h2>Your cart is empty</h2>
+      <p>Fresh parts, accessories, and garage essentials are waiting.</p>
+      <a class="primary-action" href="{{ url_for('home') }}">Shop now</a>
+    </div>
+  {% endif %}
+  <div class="cart-toast" data-cart-toast role="status" aria-live="polite"></div>
+</section>
+{% endblock %}
+{% block js %}
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}

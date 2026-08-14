@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ order.order_number }} | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div><p class="eyebrow">Invoice</p><h1>{{ order.order_number }}</h1></div>
+    <a class="ghost-link" href="{{ url_for('user_order_detail', order_id=order.id) }}">Back to order</a>
+  </div>
+  <section class="commerce-panel">
+    <p><strong>{{ order.display_customer_name }}</strong><br>{{ order.display_customer_email }}<br>{{ order.display_address_line1 }}, {{ order.display_city }}, {{ order.display_state }} - {{ order.display_pincode }}</p>
+    {% for item in order.order_items %}
+      <div class="summary-row"><span>{{ item.product_name }} x {{ item.quantity }}</span><strong>{{ (item.price * item.quantity)|currency }}</strong></div>
+    {% endfor %}
+    <div class="summary-row"><span>Subtotal</span><strong>{{ order.subtotal_value|currency }}</strong></div>
+    <div class="summary-row"><span>Discount</span><strong>-{{ order.discount_amount|currency }}</strong></div>
+    <div class="summary-row"><span>Delivery Fee</span><strong>{{ order.shipping_charge|currency }}</strong></div>
+    <div class="summary-row"><span>Total</span><strong>{{ order.total_amount|currency }}</strong></div>
+  </section>
+</section>
+{% endblock %}

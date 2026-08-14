@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard | Wolfs Industries Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<section class="admin-grid">
+  {% for label, value in [("Products", products_count), ("Categories", categories_count), ("Brands", brands_count), ("Customers", customers_count), ("Orders", orders_count), ("Revenue", revenue_total|currency), ("Pending orders", pending_orders), ("Completed orders", completed_orders), ("Cancelled orders", cancelled_orders), ("Low stock products", low_stock_count)] %}
+  <article class="metric-card"><div class="metric-label">{{ label }}</div><div class="metric-value">{{ value }}</div></article>
+  {% endfor %}
+</section>
+<section class="split-layout">
+  <div class="panel-card table-shell"><div class="panel-header"><div><h4>Latest Orders</h4><p>Live PostgreSQL order data</p></div><a href="{{ url_for('orders') }}" class="ghost-btn">View all</a></div>
+    <div class="table-wrap"><table class="admin-table"><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+      {% for order in recent_orders %}<tr><td>{{ order.order_number }}</td><td>{{ order.display_customer_name or "-" }}</td><td>{{ order.total_amount|currency }}</td><td>{{ order.order_status or "Pending" }}</td></tr>{% else %}<tr><td colspan="4">No orders yet.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+  <div class="stack"><div class="panel-card"><div class="panel-header"><div><h4>Low Stock Products</h4><p>Five or fewer units remaining</p></div><a href="{{ url_for('products') }}" class="ghost-btn">Inventory</a></div><div class="compact-list">
+    {% for product in low_stock_products %}<div class="compact-item"><span>{{ product.name }}</span><strong>{{ product.stock }}</strong></div>{% else %}<div class="compact-item">No low-stock products.</div>{% endfor %}
+  </div></div></div>
+</section>
+<section class="split-layout">
+  <div class="panel-card"><div class="panel-header"><h4>Recent Products</h4></div><div class="compact-list">{% for product in recent_products %}<div class="compact-item"><span>{{ product.name }}</span><span>{{ product.price|currency }} - {{ product.stock }} in stock</span></div>{% else %}<div class="compact-item">No products yet.</div>{% endfor %}</div></div>
+  <div class="panel-card"><div class="panel-header"><h4>Latest Reviews</h4><a href="{{ url_for('reviews') }}" class="ghost-btn">View all</a></div><div class="compact-list">{% for review in recent_reviews %}<div class="compact-item"><span>{{ review.product.name if review.product else "Product" }} - {{ review.rating }}/5</span><span>{{ review.status }}</span></div>{% else %}<div class="compact-item">No reviews yet.</div>{% endfor %}</div></div>
+</section>
+{% endblock %}

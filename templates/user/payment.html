@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Payment | Wolfs Industries{% endblock %}
+{% block css %}
+<style>
+  .payment-status {
+    min-height: 20px;
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .payment-status.is-error {
+    color: #dc2626;
+  }
+
+  .payment-card input[type="radio"] {
+    margin-top: 4px;
+  }
+
+  @media (max-width: 640px) {
+    .payment-options .primary-action {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div>
+      <p class="eyebrow">Payment</p>
+      <h1>Choose payment method</h1>
+    </div>
+    <a class="ghost-link" href="{{ url_for('checkout') }}">Change address</a>
+  </div>
+  <div class="checkout-grid">
+    <form id="payment-form" method="post" action="{{ url_for('place_order') }}" class="commerce-panel payment-options">
+      <input type="hidden" name="address_id" value="{{ address.id }}">
+      <label class="payment-card">
+        <input type="radio" name="payment_method" value="cashfree" checked>
+        <span><strong>Pay Online</strong><small>Card / UPI / Netbanking</small></span>
+      </label>
+
+      <p id="payment-status" class="payment-status" aria-live="polite"></p>
+      <button id="pay-button" class="primary-action" type="submit">Proceed to Pay</button>
+    </form>
+    <aside class="price-card">
+      <h2>Deliver To</h2>
+      <p><strong>{{ address.full_name }}</strong><br>{{ address.phone }}<br>{{ address.address_line1 }}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}</p>
+      <h2>Price Details</h2>
+      <div><span>Product Price</span><strong>{{ totals.product_total|currency }}</strong></div>
+      <div><span>Discount</span><strong class="success">-{{ totals.discount|currency }}</strong></div>
+      <div><span>Subtotal</span><strong>{{ totals.subtotal|currency }}</strong></div>
+      <div><span>Delivery Fee</span><strong>{{ totals.delivery_charge|delivery_display }}</strong></div>
+      <div class="grand-total"><span>Total Payable</span><strong>{{ totals.total|currency }}</strong></div>
+    </aside>
+  </div>
+</section>
+{% endblock %}
+{% block js %}
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+<script>
+  (function () {
+    const form = document.getElementById("payment-form");
+    const payButton = document.getElementById("pay-button");
+    const statusText = document.getElementById("payment-status");
+    const addressId = "{{ address.id }}";
+    const cashfree = Cashfree({ mode: "{{ cashfree_mode }}" });
+    let isProcessing = false;
+
+    function setLoading(loading, message) {
+      isProcessing = loading;
+      payButton.disabled = loading;
+      payButton.textContent = loading ? "Processing payment..." : "Proceed to Pay";
+      statusText.textContent = message || "";
+      statusText.classList.remove("is-error");
+    }
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (isProcessing) {
+        return;
+      }
+
+      setLoading(true, "Processing payment...");
+      try {
+        const response = await fetch("{{ url_for('cashfree_create_session') }}", {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ address_id: addressId })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || "Unable to start payment. Please try again.");
+        }
+        if (data.redirect_url) {
+          window.location.href = data.redirect_url;
+          return;
+        }
+        if (!data.payment_session_id) {
+          throw new Error("Unable to start payment. Please try again.");
+        }
+        await cashfree.checkout({
+          paymentSessionId: data.payment_session_id,
+          redirectTarget: "_self"
+        });
+      } catch (error) {
+        setLoading(false);
+        statusText.textContent = "Unable to start payment. Please try again.";
+        statusText.classList.add("is-error");
+      }
+    });
+  })();
+</script>
+{% endblock %}

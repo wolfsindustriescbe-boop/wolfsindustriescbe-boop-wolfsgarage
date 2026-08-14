@@ -1,0 +1,44 @@
+.brands-section{
+    width:90%;
+    max-width:1400px;
+    margin:70px auto;
+}
+
+.brands-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:18px;
+}
+
+.brand-card{
+    background:var(--wi-surface);
+    border:1px solid var(--wi-line);
+    border-radius:10px;
+    padding:22px 18px;
+    text-align:center;
+    box-shadow:var(--wi-shadow);
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.brand-card:hover{
+    transform:translateY(-3px);
+    border-color:#cfd6df;
+    box-shadow:var(--wi-shadow-hover);
+}
+
+.brand-card img{
+    width:84px;
+    height:84px;
+    object-fit:contain;
+    margin-bottom:14px;
+}
+
+.brand-card h3{
+    font-size:18px;
+    margin-bottom:6px;
+}
+
+.brand-card p{
+    color:var(--wi-muted);
+    font-size:14px;
+}

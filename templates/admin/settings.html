@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+<div class="split-layout">
+  <section class="stack">
+    <article class="panel-card">
+      <div class="panel-header">
+        <div>
+          <h4>Delivery Charge</h4>
+          <p>Configure the one delivery fee used for new checkouts and orders.</p>
+        </div>
+      </div>
+      <form method="post">
+        <label>
+          Delivery Charge (INR)
+          <input
+            type="number"
+            name="delivery_charge"
+            min="0"
+            step="0.01"
+            required
+            value="{{ '%.2f'|format(delivery_charge) }}"
+            inputmode="decimal"
+          >
+        </label>
+        <button class="primary-btn" type="submit">Save Changes</button>
+      </form>
+      <div class="compact-item">
+        <span>Current delivery charge</span>
+        <strong>{{ delivery_charge|currency }}</strong>
+      </div>
+    </article>
+  </section>
+  <aside class="stack">
+    <article class="panel-card">
+      <div class="panel-header">
+        <div>
+          <h4>System</h4>
+          <p>Operational settings pulled from the live application config.</p>
+        </div>
+      </div>
+      <div class="compact-item"><span>Database</span><strong>PostgreSQL</strong></div>
+      <div class="compact-item"><span>Admin code configured</span><strong>{{ 'Yes' if admin_code_configured else 'No' }}</strong></div>
+      <div class="compact-item"><span>Uploads path</span><strong>{{ uploads_path }}</strong></div>
+    </article>
+  </aside>
+</div>
+{% endblock %}

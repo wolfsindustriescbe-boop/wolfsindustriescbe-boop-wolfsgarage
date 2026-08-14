@@ -1,0 +1,259 @@
+@media (max-width: 1200px) {
+    .product-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 992px) {
+    .top-bar {
+        display: none;
+    }
+
+    .search-box {
+        display: none;
+    }
+
+    .nav-icons {
+        display: flex;
+        flex: 1 1 100%;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .navbar {
+        height: auto;
+        min-height: 78px;
+        padding: 14px 20px;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .brand-mark span {
+        font-size: 20px;
+    }
+
+    .hero-banner {
+        padding: 30px 24px;
+    }
+
+    .hero-banner {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-banner__copy {
+        text-align: center;
+        padding: 8px 0 0;
+    }
+
+    .hero-banner__copy h1 {
+        font-size: 36px;
+        max-width: none;
+    }
+
+    .hero-banner__copy p {
+        font-size: 16px;
+        max-width: none;
+    }
+
+    .hero-banner__actions,
+    .hero-banner__meta {
+        justify-content: center;
+    }
+
+    .hero-banner__visual {
+        min-height: 300px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .brands-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .offer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .newsletter-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .newsletter-form {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        width: 94%;
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    .logo {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .nav-icons a {
+        min-height: 36px;
+        justify-content: center;
+        padding: 8px 10px;
+        border: 1px solid #2d353f;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #cbd5e1;
+    }
+    .nav-icons a:hover {
+        background: rgba(255, 255, 255, 0.10);
+        color: #ffffff;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .section-title h1,
+    .section-title h2,
+    .newsletter-text h2 {
+        font-size: 28px;
+    }
+
+    .categories,
+    .offers,
+    .brands-section,
+    .newsletter,
+    .products-section,
+    .section,
+    .hero-banner {
+        width: 94%;
+    }
+
+    .product-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid,
+    .brands-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .product-info {
+        padding: 10px;
+    }
+
+    .product-info h3 {
+        font-size: 13px;
+        height: 2.8em;
+    }
+
+    .product-info .brand {
+        font-size: 11px;
+        margin-bottom: 4px;
+    }
+
+    .price {
+        font-size: 14px;
+    }
+
+    .product-info del {
+        font-size: 11px;
+        margin-left: 4px;
+    }
+
+    .product-actions {
+        grid-template-columns: 1fr 34px;
+        gap: 6px;
+        padding-top: 8px;
+    }
+
+    .product-info button {
+        font-size: 11px;
+        height: 32px;
+    }
+
+    .offer-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .newsletter-form input {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .newsletter-form button {
+        width: 100%;
+    }
+
+    .nav-icons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+    }
+
+    .nav-icons a {
+        font-size: 13px;
+        min-width: 0;
+    }
+
+    .hero-banner {
+        padding: 18px;
+        gap: 18px;
+    }
+
+    .hero-banner__eyebrow {
+        font-size: 11px;
+        letter-spacing: .06em;
+    }
+
+    .hero-banner__copy h1 {
+        font-size: 28px;
+    }
+
+    .hero-banner__visual {
+        min-height: 210px;
+    }
+}
+
+@media (max-width: 360px) {
+    .brand-mark {
+        gap: 9px;
+    }
+
+    .brand-mark img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .brand-mark span {
+        font-size: 18px;
+    }
+
+    .product-grid {
+        gap: 10px;
+    }
+
+    .product-info button {
+        font-size: 10px;
+    }
+}

@@ -1,0 +1,1 @@
+<section class="products-section"><div class="section-header"><h2>Best Sellers</h2></div><div class="product-grid">{% for product in best_sellers[:8] %}{% include "includes/product_card.html" %}{% else %}<p>No best sellers available.</p>{% endfor %}</div></section>

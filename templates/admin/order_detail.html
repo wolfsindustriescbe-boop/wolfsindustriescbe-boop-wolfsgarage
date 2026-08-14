@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+{% block title %}Order {{ order.order_number }} | Wolfs Industries Admin{% endblock %}
+{% block page_title %}Order {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="split-layout">
+  <section class="stack">
+    <article class="panel-card">
+      <div class="panel-header"><div><h4>Customer Details</h4><p>{{ order.display_customer_email or '' }}</p></div><span class="admin-status">{{ order.order_status }}</span></div>
+      <p><strong>{{ order.display_customer_name or 'Customer' }}</strong><br>{{ order.display_customer_phone or '' }}</p>
+      {% if order.display_address_line1 %}<p>{{ order.display_address_line1 }}{% if order.display_address_line2 %}, {{ order.display_address_line2 }}{% endif %}, {{ order.display_city }}, {{ order.display_state }} - {{ order.display_pincode }}{% if order.display_country %}, {{ order.display_country }}{% endif %}</p>{% endif %}
+    </article>
+    <article class="panel-card">
+      <div class="panel-header"><h4>Ordered Products</h4></div>
+      {% for item in order.order_items %}
+        <div class="admin-order-line">
+          {% if item.product and item.product.main_image %}<img src="{{ uploaded_url(item.product.main_image) }}" alt="{{ item.product_name }}" loading="lazy">{% endif %}
+          <div><strong>{{ item.product_name }}</strong><small>Qty {{ item.quantity }} - {{ item.price|currency }}</small></div>
+          <strong>{{ (item.price * item.quantity)|currency }}</strong>
+        </div>
+      {% endfor %}
+    </article>
+    <article class="panel-card">
+      <div class="panel-header"><h4>Timeline</h4></div>
+      <ol class="admin-timeline">{% for step in timeline %}<li class="{% if step.done %}done{% endif %}">{{ step.label }}</li>{% endfor %}</ol>
+    </article>
+  </section>
+  <aside class="stack">
+    <article class="panel-card">
+      <div class="panel-header"><h4>Update Status</h4></div>
+      <form method="post" action="{{ url_for('admin_order_update', order_id=order.id) }}">
+        <label>Order status
+          <select name="order_status">
+            {% for status in ['Pending', 'Confirmed', 'Packed', 'Shipped', 'Out For Delivery', 'Delivered', 'Cancelled'] %}
+              <option value="{{ status }}" {% if order.order_status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Payment status
+          <select name="payment_status">
+            {% for status in ['Pending', 'Paid', 'Failed', 'Refunded'] %}
+              <option value="{{ status }}" {% if order.payment_status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Payment method<input name="payment_method" value="{{ order.payment_method }}"></label>
+        <button class="primary-btn" type="submit">Save Update</button>
+      </form>
+    </article>
+    <article class="panel-card">
+      <div class="panel-header"><h4>Payment</h4></div>
+      <div class="compact-item"><span>Method</span><strong>{{ order.payment_method }}</strong></div>
+      <div class="compact-item"><span>Status</span><strong>{{ order.payment_status }}</strong></div>
+      {% if order.payment and (order.payment.gateway_payment_id or order.payment.transaction_id) %}
+        <div class="compact-item"><span>Transaction ID</span><strong>{{ order.payment.transaction_id or order.payment.gateway_payment_id }}</strong></div>
+      {% endif %}
+      {% if order.payment and order.payment.gateway_order_id %}
+        <div class="compact-item"><span>Gateway Order</span><strong>{{ order.payment.gateway_order_id }}</strong></div>
+      {% endif %}
+      <div class="compact-item"><span>Subtotal</span><strong>{{ order.subtotal_value|currency }}</strong></div>
+      <div class="compact-item"><span>Discount</span><strong>-{{ order.discount_amount|currency }}</strong></div>
+      <div class="compact-item"><span>Delivery Fee</span><strong>{{ order.shipping_charge|delivery_display }}</strong></div>
+      <div class="compact-item"><span>Total</span><strong>{{ order.total_amount|currency }}</strong></div>
+    </article>
+    <article class="panel-card">
+      <div class="panel-header"><h4>Notes</h4></div>
+      <p>This order uses the reusable Payment row linked to the order.</p>
+      <a class="table-action" href="{{ url_for('admin_order_invoice', order_id=order.id) }}">Invoice</a>
+    </article>
+  </aside>
+</div>
+{% endblock %}

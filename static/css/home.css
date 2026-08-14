@@ -1,0 +1,119 @@
+.main-container{
+    width:100%;
+}
+
+.flash-messages{
+    width:90%;
+    max-width:1400px;
+    margin:20px auto 0;
+    display:grid;
+    gap:12px;
+}
+
+.flash-message{
+    padding:14px 18px;
+    border-radius:10px;
+    font-weight:600;
+    box-shadow:var(--wi-shadow);
+}
+
+.flash-success{
+    background:#ecfdf5;
+    color:#166534;
+    border:1px solid #a7f3d0;
+}
+
+.flash-warning{
+    background:#fffbeb;
+    color:#92400e;
+    border:1px solid #fde68a;
+}
+
+.flash-danger{
+    background:#fef2f2;
+    color:#991b1b;
+    border:1px solid #fecaca;
+}
+
+.section{
+    width:90%;
+    max-width:1400px;
+    margin:70px auto;
+}
+
+.section-title{
+    margin-bottom:24px;
+}
+
+.section-title h1,
+.section-title h2{
+    font-size:32px;
+    margin-bottom:8px;
+    color:var(--wi-ink);
+}
+
+.section-title p{
+    color:var(--wi-muted);
+}
+
+.empty-state{
+    background:var(--wi-surface);
+    border:1px solid var(--wi-line);
+    border-radius:12px;
+    padding:48px 24px;
+    text-align:center;
+    box-shadow:var(--wi-shadow);
+}
+
+.empty-state h1{
+    font-size:52px;
+    margin-bottom:8px;
+    color:var(--wi-accent);
+}
+
+.empty-state h2{
+    font-size:28px;
+    margin-bottom:12px;
+}
+
+.empty-state p{
+    color:var(--wi-muted);
+    margin-bottom:24px;
+}
+
+.shop-btn{
+    display:inline-block;
+    background:var(--wi-ink);
+    color:#fff;
+    padding:14px 30px;
+    border-radius:10px;
+    font-weight:700;
+}
+
+.back-to-top{
+    position:fixed;
+    right:24px;
+    bottom:24px;
+    width:48px;
+    height:48px;
+    border:none;
+    border-radius:50%;
+    background:var(--wi-ink);
+    color:#fff;
+    box-shadow:0 10px 24px rgba(0,0,0,.2);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(12px);
+    transition:opacity .2s ease, visibility .2s ease, transform .2s ease, background .2s ease;
+    z-index:50;
+}
+
+.back-to-top:hover{
+    background:#26313d;
+}
+
+.back-to-top.show{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
+}

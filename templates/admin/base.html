@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Wolfs Industries Admin{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="admin-page">
+    <header class="admin-header">
+        <div class="admin-topbar">
+            <span>Operations workspace - Wolfs Industries</span>
+            <div class="admin-topbar__links"><a href="{{ url_for('admin_profile') }}"><i data-lucide="user-round" width="13" height="13"></i> {{ session.get('admin_username', 'Administrator') }}</a><a href="{{ url_for('admin_auth.logout') }}"><i data-lucide="log-out" width="13" height="13"></i> Logout</a></div>
+        </div>
+        <div class="admin-header__inner">
+            <a class="admin-brand" href="{{ url_for('admin_dashboard') }}" aria-label="Wolfs Industries admin dashboard">
+                <span><strong>Wolfs Industries</strong><small>Administration</small></span>
+            </a>
+            <form class="admin-search" method="get" action="{{ url_for('products') }}"><input name="q" placeholder="Search products, SKU..." aria-label="Search products"><button type="submit"><i data-lucide="search" width="15" height="15"></i><span>Search</span></button></form>
+            <button class="admin-menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false"><i data-lucide="menu"></i></button>
+            <nav class="admin-nav">
+                <a class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}"><i data-lucide="layout-dashboard" width="14" height="14"></i> Dashboard</a>
+                <a class="{% if request.endpoint in ['products', 'admin_product_new', 'admin_product_edit'] %}active{% endif %}" href="{{ url_for('products') }}"><i data-lucide="package" width="14" height="14"></i> Products</a>
+                <a class="{% if request.endpoint in ['orders', 'admin_order_update', 'admin_order_detail'] %}active{% endif %}" href="{{ url_for('orders') }}"><i data-lucide="shopping-bag" width="14" height="14"></i> Orders</a>
+                <a class="{% if request.endpoint == 'customers' %}active{% endif %}" href="{{ url_for('customers') }}"><i data-lucide="users" width="14" height="14"></i> Customers</a>
+                <a class="{% if request.endpoint == 'admin_categories' %}active{% endif %}" href="{{ url_for('admin_categories') }}"><i data-lucide="folders" width="14" height="14"></i> Categories</a>
+                <a class="{% if request.endpoint == 'admin_brands' %}active{% endif %}" href="{{ url_for('admin_brands') }}"><i data-lucide="tag" width="14" height="14"></i> Brands</a>
+                <a class="{% if request.endpoint == 'reviews' %}active{% endif %}" href="{{ url_for('reviews') }}"><i data-lucide="star" width="14" height="14"></i> Reviews</a>
+                <a class="{% if request.endpoint == 'admin_settings' %}active{% endif %}" href="{{ url_for('admin_settings') }}"><i data-lucide="truck" width="14" height="14"></i> Settings</a>
+                <a class="{% if request.endpoint == 'admin_profile' %}active{% endif %}" href="{{ url_for('admin_profile') }}"><i data-lucide="settings-2" width="14" height="14"></i> Profile</a>
+            </nav>
+        </div>
+    </header>
+    <main class="admin-container">
+        <h1>{% block page_title %}{% endblock %}</h1>
+        {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="flash-message flash-{{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{{ url_for('static', filename='js/admin-dashboard.js') }}"></script>
+    <script>
+        const menuToggle = document.querySelector('.admin-menu-toggle');
+        const adminNav = document.querySelector('.admin-nav');
+        menuToggle?.addEventListener('click', () => {
+            const open = adminNav?.classList.toggle('is-open');
+            menuToggle.setAttribute('aria-expanded', String(Boolean(open)));
+        });
+        window.lucide?.createIcons();
+    </script>
+</body>
+</html>

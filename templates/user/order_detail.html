@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Order {{ order.order_number }} | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div><p class="eyebrow">Order details</p><h1>{{ order.order_number }}</h1></div>
+    <span class="status-badge status-{{ order.order_status|lower|replace(' ', '-') }}">{{ order.order_status }}</span>
+  </div>
+  <div class="checkout-grid">
+    <div class="commerce-stack">
+      <section class="commerce-panel">
+        <h2>Status Timeline</h2>
+        <ol class="timeline">
+          {% for step in timeline %}<li class="{% if step.done %}done{% endif %}">{{ step.label }}</li>{% endfor %}
+        </ol>
+      </section>
+      <section class="commerce-panel">
+        <h2>Products</h2>
+        {% for item in order.order_items %}
+          <div class="order-line">
+            {% if item.product and item.product.main_image %}<img src="{{ uploaded_url(item.product.main_image) }}" alt="{{ item.product_name }}" loading="lazy">{% else %}<img src="{{ url_for('static', filename='images/placeholder.svg') }}" alt="{{ item.product_name }}" loading="lazy">{% endif %}
+            <div><h2>{{ item.product_name }}</h2><p>Quantity {{ item.quantity }} - {{ item.price|currency }}</p></div>
+          </div>
+        {% endfor %}
+      </section>
+    </div>
+    <aside class="price-card">
+      <h2>Delivery Address</h2>
+      <p><strong>{{ order.display_customer_name }}</strong><br>{{ order.display_customer_phone }}<br>{{ order.display_address_line1 }}{% if order.display_address_line2 %}, {{ order.display_address_line2 }}{% endif %}, {{ order.display_city }}, {{ order.display_state }} - {{ order.display_pincode }}</p>
+      <h2>Payment</h2>
+      <div><span>Method</span><strong>{{ order.payment_method }}</strong></div>
+      <div><span>Status</span><strong>{{ order.payment_status }}</strong></div>
+      {% if order.payment and (order.payment.gateway_payment_id or order.payment.transaction_id) %}
+        <div><span>Transaction ID</span><strong>{{ order.payment.transaction_id or order.payment.gateway_payment_id }}</strong></div>
+      {% endif %}
+      <div><span>Subtotal</span><strong>{{ order.subtotal_value|currency }}</strong></div>
+      <div><span>Discount</span><strong class="success">-{{ order.discount_amount|currency }}</strong></div>
+      <div><span>Delivery Fee</span><strong>{{ order.shipping_charge|delivery_display }}</strong></div>
+      <div class="grand-total"><span>Total</span><strong>{{ order.total_amount|currency }}</strong></div>
+      {% if order.payment_method == 'Cashfree' and order.payment_status|lower in ['pending', 'failed'] %}
+        <a class="primary-action" href="{{ url_for('payment', address_id=order.address_id) }}">Retry Payment</a>
+      {% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

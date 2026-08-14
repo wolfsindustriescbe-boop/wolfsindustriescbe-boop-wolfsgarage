@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div>
+      <p class="eyebrow">Customer dashboard</p>
+      <h1>Welcome, {{ user.full_name }}</h1>
+    </div>
+    <a class="primary-action compact" href="{{ url_for('home') }}">Shop Parts</a>
+  </div>
+  <div class="dashboard-grid">
+    <article class="commerce-panel stat-panel"><span>Cart</span><strong>{{ cart_items|length }}</strong><small>{{ cart_totals.total|currency }}</small></article>
+    <article class="commerce-panel stat-panel"><span>Wishlist</span><strong>{{ wishlist_items|length }}</strong><small>Saved products</small></article>
+    <article class="commerce-panel stat-panel"><span>Addresses</span><strong>{{ addresses|length }}</strong><small>Delivery profiles</small></article>
+    <article class="commerce-panel profile-tile">
+      <h2>Profile</h2>
+      <p><strong>{{ user.full_name }}</strong><br>{{ user.email }}<br>{{ user.phone or 'Phone not added' }}</p>
+      <a class="ghost-link" href="{{ url_for('profile') }}">Edit profile</a>
+    </article>
+    <article class="commerce-panel">
+      <h2>Recent Orders</h2>
+      {% for order in recent_orders %}
+        <a class="summary-row" href="{{ url_for('user_order_detail', order_id=order.id) }}"><span>{{ order.order_number }}</span><strong>{{ order.order_status }}</strong></a>
+      {% else %}<p class="muted">No orders yet.</p>{% endfor %}
+    </article>
+    <article class="commerce-panel">
+      <h2>Wishlist Summary</h2>
+      {% for item in wishlist_items %}
+        <a class="summary-row" href="{{ url_for('product_detail', slug=item.product.slug) }}"><span>{{ item.product.name }}</span><strong>{{ (item.product.discount_price or item.product.price)|currency }}</strong></a>
+      {% else %}<p class="muted">No wishlist items yet.</p>{% endfor %}
+    </article>
+    <article class="commerce-panel">
+      <h2>Saved Addresses</h2>
+      {% for address in addresses[:2] %}
+        <p class="address-mini"><strong>{{ address.full_name }}</strong><br>{{ address.address_line1 }}, {{ address.city }} - {{ address.pincode }}</p>
+      {% else %}<p class="muted">No saved addresses.</p>{% endfor %}
+    </article>
+    <article class="commerce-panel">
+      <h2>Quick Actions</h2>
+      <div class="quick-actions">
+        <a href="{{ url_for('cart') }}">Open Cart</a>
+        <a href="{{ url_for('wishlist') }}">Open Wishlist</a>
+        <a href="{{ url_for('user_orders') }}">Track Orders</a>
+        <a href="{{ url_for('checkout') }}">Checkout</a>
+      </div>
+    </article>
+  </div>
+  <section class="commerce-panel">
+    <h2>Recently Viewed Products</h2>
+    <div class="product-grid">
+      {% for product in recently_viewed_products %}
+        {% include "includes/product_card.html" %}
+      {% else %}
+        <p class="muted">Browse products to fill this section.</p>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

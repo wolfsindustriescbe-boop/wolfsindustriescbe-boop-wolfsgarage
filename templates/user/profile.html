@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Profile | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading"><div><p class="eyebrow">Profile</p><h1>{{ user.full_name }}</h1></div><a class="ghost-link" href="{{ url_for('auth.logout') }}">Logout</a></div>
+  <div class="checkout-grid">
+    <div class="commerce-stack">
+      <section class="commerce-panel profile-panel">
+        {% if user.profile_image %}<img src="{{ user.profile_image }}" alt="{{ user.full_name }}">{% else %}<div class="avatar">{{ user.full_name[:1] }}</div>{% endif %}
+        <form method="post" action="{{ url_for('profile_update') }}" class="form-grid">
+          <input name="full_name" value="{{ user.full_name }}" placeholder="Full name" required>
+          <input value="{{ user.email }}" disabled>
+          <input name="phone" value="{{ user.phone or '' }}" placeholder="Phone">
+          <button class="primary-action" type="submit">Save Profile</button>
+        </form>
+      </section>
+      <section class="commerce-panel">
+        <h2>Saved Addresses</h2>
+        {% for address in addresses %}
+          <article class="address-card manage">
+            <span><strong>{{ address.full_name }}</strong><small>{{ address.phone }}</small>{{ address.address_line1 }}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}{% if address.is_default %}<em>Default</em>{% endif %}</span>
+            <div class="mini-actions">
+              <form method="post" action="{{ url_for('address_default', address_id=address.id) }}"><button type="submit">Default</button></form>
+              <form method="post" action="{{ url_for('address_delete', address_id=address.id) }}"><button type="submit">Delete</button></form>
+            </div>
+            <details class="address-edit">
+              <summary>Edit Address</summary>
+              <form method="post" action="{{ url_for('address_save') }}" class="form-grid">
+                <input type="hidden" name="address_id" value="{{ address.id }}">
+                <input name="full_name" value="{{ address.full_name }}" placeholder="Full name" required>
+                <input name="phone" value="{{ address.phone }}" placeholder="Phone" required>
+                <input name="address_line1" value="{{ address.address_line1 }}" placeholder="Address line 1" required>
+                <input name="address_line2" value="{{ address.address_line2 or '' }}" placeholder="Address line 2">
+                <input name="city" value="{{ address.city }}" placeholder="City" required>
+                <input name="state" value="{{ address.state }}" placeholder="State" required>
+                <input name="pincode" value="{{ address.pincode }}" placeholder="Pincode" required>
+                <input name="country" value="{{ address.country or 'India' }}" placeholder="Country" required>
+                <label class="check-row"><input type="checkbox" name="is_default" {% if address.is_default %}checked{% endif %}> Set as default</label>
+                <button class="ghost-button" type="submit">Save Changes</button>
+              </form>
+            </details>
+          </article>
+        {% else %}<p class="muted">No saved addresses.</p>{% endfor %}
+      </section>
+      <section class="commerce-panel">
+        <h2>Add Address</h2>
+        <form method="post" action="{{ url_for('address_save') }}" class="form-grid">
+          <input name="full_name" placeholder="Full name" required><input name="phone" placeholder="Phone" required>
+          <input name="address_line1" placeholder="Address line 1" required><input name="address_line2" placeholder="Address line 2">
+          <input name="city" placeholder="City" required><input name="state" placeholder="State" required>
+          <input name="pincode" placeholder="Pincode" required><input name="country" value="India" required>
+          <label class="check-row"><input type="checkbox" name="is_default"> Set as default</label>
+          <button class="ghost-button" type="submit">Save Address</button>
+        </form>
+      </section>
+    </div>
+    <aside class="price-card">
+      <h2>Account</h2>
+      <a href="{{ url_for('user_orders') }}">Orders</a>
+      <a href="{{ url_for('wishlist') }}">Wishlist</a>
+      <a href="{{ url_for('cart') }}">Cart</a>
+      <a href="{{ url_for('auth.logout') }}">Logout</a>
+      <h2>Recent Orders</h2>
+      {% for order in recent_orders %}<a href="{{ url_for('user_order_detail', order_id=order.id) }}">{{ order.order_number }} - {{ order.order_status }}</a>{% else %}<p class="muted">No orders yet.</p>{% endfor %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

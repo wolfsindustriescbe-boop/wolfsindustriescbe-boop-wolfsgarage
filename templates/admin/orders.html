@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block title %}Orders | Wolfs Industries Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+{% block content %}
+<section class="admin-grid">
+  <article class="metric-card"><div class="metric-label">Pending</div><div class="metric-value">{{ pending_orders }}</div></article>
+  <article class="metric-card"><div class="metric-label">Delivered</div><div class="metric-value">{{ completed_orders }}</div></article>
+  <article class="metric-card"><div class="metric-label">Cancelled</div><div class="metric-value">{{ cancelled_orders }}</div></article>
+  <article class="metric-card"><div class="metric-label">All orders</div><div class="metric-value">{{ orders_count }}</div></article>
+</section>
+
+<section class="panel-card">
+  <div class="panel-header">
+    <div><h4>Seller Order Queue</h4><p>Customer, products, payment, and status are read from PostgreSQL orders.</p></div>
+  </div>
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Customer</th><th>Product</th><th>Order ID</th><th>Payment</th><th>Amount</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+          {% set first_item = order.order_items[0] if order.order_items else none %}
+          <tr>
+            <td>{{ order.display_customer_name or 'Customer' }}<small>{{ order.display_customer_phone or '' }}</small></td>
+            <td>
+              <div class="admin-product-cell">
+                {% if first_item and first_item.product and first_item.product.main_image %}<img src="{{ uploaded_url(first_item.product.main_image) }}" alt="{{ first_item.product_name }}" loading="lazy">{% endif %}
+                <span>{{ first_item.product_name if first_item else 'Multiple products' }}<small>{{ order.order_items|length }} item{{ '' if order.order_items|length == 1 else 's' }}</small></span>
+              </div>
+            </td>
+            <td>{{ order.order_number }}</td>
+            <td>{{ order.payment_method }}<small>{{ order.payment_status }}</small></td>
+            <td>{{ order.total_amount|currency }}</td>
+            <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+            <td><span class="admin-status">{{ order.order_status }}</span></td>
+            <td><a class="table-action" href="{{ url_for('admin_order_detail', order_id=order.id) }}">View</a></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">No orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

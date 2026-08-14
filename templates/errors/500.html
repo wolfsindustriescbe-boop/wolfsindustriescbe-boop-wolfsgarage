@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error | Wolfs Industries{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="empty-state">
+        <h1>500</h1>
+        <h2>Something went wrong</h2>
+        <p>An unexpected server error occurred. Please try again later.</p>
+        <a href="{{ url_for('home') }}" class="shop-btn">Go Home</a>
+    </div>
+</section>
+{% endblock %}

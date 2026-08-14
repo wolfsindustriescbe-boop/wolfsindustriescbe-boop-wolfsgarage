@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wolfs Industries | Login</title>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+
+<body class="login-page">
+    <div class="login-shell">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-branding">
+                    <div class="login-branding__top">
+                        <h1>Wolfs Industries</h1>
+                        <p>Premium Auto Parts Marketplace</p>
+                    </div>
+                    <div class="login-branding__mid">
+                        <span class="login-kicker">Performance starts here</span>
+                        <h2>Quality parts, accessories, and upgrades for serious riders.</h2>
+                        <p>Explore trusted automotive essentials with a fast, secure Wolfs Industries shopping experience.</p>
+                        <div class="login-features">
+                            <div class="login-feature-item">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Genuine Products Only</span>
+                            </div>
+                            <div class="login-feature-item">
+                                <i class="fa-solid fa-truck-fast"></i>
+                                <span>Fast Reliable Shipping</span>
+                            </div>
+                            <div class="login-feature-item">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Secure Checkout Gateway</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="login-branding__footer">
+                        <p>&copy; 2026 Wolfs Industries. All rights reserved.</p>
+                    </div>
+                </div>
+
+                <div class="login-form-side">
+                    <span class="login-card-label">Customer Access</span>
+                    <h2>Welcome Back</h2>
+                    <p class="login-muted">Sign in to continue shopping</p>
+
+                    <!-- Flash messages from server -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="login-messages">
+                                {% for category, message in messages %}
+                                    <div class="login-alert login-alert--{{ category }}">
+                                        {% if category == 'success' %}
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        {% elif category == 'warning' %}
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-exclamation"></i>
+                                        {% endif %}
+                                        <span>{{ message }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <button
+                        type="button"
+                        onclick="window.location.href='{{ url_for('auth.login') }}'"
+                        class="login-google-btn">
+                        <img
+                            src="https://www.svgrepo.com/show/475656/google-color.svg"
+                            class="google-icon"
+                            alt="Google Logo">
+                        <span>Continue with Google</span>
+                    </button>
+
+                    <div class="login-divider">
+                        <em>OR</em>
+                    </div>
+
+                    <a
+                        href="{{ url_for('admin_auth.login') }}"
+                        class="login-admin-link">
+                        <span>Admin Login</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <footer class="login-footer">
+                <p>&copy; 2026 Wolfs Industries. All rights reserved.</p>
+            </footer>
+        </div>
+    </div>
+</body>
+
+</html>

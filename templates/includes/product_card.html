@@ -1,0 +1,83 @@
+<article class="product-card">
+
+    <a href="{{ url_for('product_detail', slug=product.slug) }}" class="product-image">
+
+        {% if product.main_image %}
+
+            <img
+                src="{{ uploaded_url(product.main_image) }}"
+                alt="{{ product.name }}"
+                loading="lazy">
+
+        {% else %}
+
+            <img
+                src="{{ url_for('static', filename='images/placeholder.svg') }}"
+                alt="{{ product.name }}"
+                loading="lazy">
+
+        {% endif %}
+
+    </a>
+
+    <div class="product-info">
+
+        <h3>
+            <a href="{{ url_for('product_detail', slug=product.slug) }}">
+                {{ product.name }}
+            </a>
+        </h3>
+
+        <p class="brand">
+            {{ product.brand.name if product.brand else "" }}
+        </p>
+
+        <p class="price">
+            {{ (product.discount_price or product.price)|currency }}
+        </p>
+
+        {% if product.discount_price %}
+            <del>{{ product.price|currency }}</del>
+        {% endif %}
+
+        <small>
+            {{ product.stock }} in stock
+        </small>
+
+        <div class="product-actions">
+
+            <form method="POST"
+                  action="{{ url_for('cart_add', product_id=product.id) }}">
+
+                <button
+                    type="submit"
+                    {% if product.stock < 1 %}disabled{% endif %}>
+
+                    {% if product.stock > 0 %}
+                        Add to Cart
+                    {% else %}
+                        Out of Stock
+                    {% endif %}
+
+                </button>
+
+            </form>
+
+            <form method="POST"
+                  action="{{ url_for('wishlist_toggle', product_id=product.id) }}">
+
+                <button
+                    type="submit"
+                    aria-label="Wishlist">
+
+                    <i class="fa-regular fa-heart"></i>
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</article>

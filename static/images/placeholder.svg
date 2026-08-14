@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-labelledby="title desc">
+  <title id="title">Wolfs Industry Placeholder</title>
+  <desc id="desc">Generic placeholder artwork for missing product and brand images.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#374151"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" rx="48" fill="url(#bg)"/>
+  <circle cx="400" cy="320" r="120" fill="#f59e0b" opacity=".18"/>
+  <path d="M240 520c42-74 99-111 160-111s118 37 160 111" fill="none" stroke="#f9fafb" stroke-width="18" stroke-linecap="round"/>
+  <rect x="225" y="190" width="350" height="92" rx="18" fill="#f9fafb" opacity=".1"/>
+  <text x="400" y="243" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" text-anchor="middle">Wolfs Industry</text>
+  <text x="400" y="590" fill="#e5e7eb" font-family="Arial, Helvetica, sans-serif" font-size="28" text-anchor="middle">Image Placeholder</text>
+</svg>

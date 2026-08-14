@@ -1,0 +1,1 @@
+<section id="trending-products" class="products-section"><div class="section-header"><h2>Trending Products</h2></div><div class="product-grid">{% for product in trending_products[:8] %}{% include "includes/product_card.html" %}{% else %}<p>No trending products available.</p>{% endfor %}</div></section>

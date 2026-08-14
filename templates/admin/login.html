@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Wolfs Industries</title>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+
+<body class="login-page login-page--admin">
+    <div class="login-shell">
+        <div class="login-container">
+            <div class="login-card login-card--admin">
+                <div class="login-branding">
+                    <div class="login-branding__top">
+                        <h1>Wolfs Industries</h1>
+                        <p>Administration Portal</p>
+                    </div>
+                    <div class="login-branding__mid">
+                        <span class="login-kicker">Secure operations</span>
+                        <h2>Manage inventory, orders, customers, and store activity.</h2>
+                        <p>Sign in to the Wolfs Industries operations workspace with your admin credentials.</p>
+                        <div class="login-features">
+                            <div class="login-feature-item">
+                                <i class="fa-solid fa-gauge"></i>
+                                <span>Real-time Analytics</span>
+                            </div>
+                            <div class="login-feature-item">
+                                <i class="fa-solid fa-boxes-stacked"></i>
+                                <span>Product & Inventory Control</span>
+                            </div>
+                            <div class="login-feature-item">
+                                <i class="fa-solid fa-headset"></i>
+                                <span>Support Desk Portal</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="login-branding__footer">
+                        <p>&copy; 2026 Wolfs Industries. All rights reserved.</p>
+                    </div>
+                </div>
+
+                <div class="login-form-side">
+                    <span class="login-card-label">Admin Access</span>
+                    <h2>Admin Login</h2>
+                    <p class="login-muted">Sign in to access admin workspace</p>
+
+                    <!-- Flash messages from server -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="login-messages">
+                                {% for category, message in messages %}
+                                    <div class="login-alert login-alert--{{ category }}">
+                                        {% if category == 'success' %}
+                                            <i class="fa-solid fa-circle-check"></i>
+                                        {% elif category == 'warning' %}
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-exclamation"></i>
+                                        {% endif %}
+                                        <span>{{ message }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <form action="{{ url_for('admin_auth.login') }}" method="POST" class="space-y-4">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                required
+                                placeholder="Enter admin username"
+                                class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                required
+                                placeholder="Enter admin password"
+                                class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="admin_code">Admin Verification Code</label>
+                            <input
+                                type="password"
+                                id="admin_code"
+                                name="admin_code"
+                                required
+                                placeholder="Enter security code"
+                                class="form-input">
+                        </div>
+
+                        <div class="form-actions">
+                            <a href="{{ url_for('admin_auth.forgot_password') }}" class="form-link">
+                                Forgot Password?
+                            </a>
+                            <a href="{{ url_for('home') }}" class="form-link form-link-highlight">
+                                Storefront
+                            </a>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <span>Authenticate</span>
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <footer class="login-footer">
+                <p>&copy; 2026 Wolfs Industries. All rights reserved.</p>
+            </footer>
+        </div>
+    </div>
+</body>
+
+</html>

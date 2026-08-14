@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Orders | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading"><div><p class="eyebrow">Order history</p><h1>Your Orders</h1></div></div>
+  <div class="commerce-stack">
+    {% for order in orders %}
+      <article class="order-card">
+        <div class="order-card__top">
+          <div><strong>{{ order.order_number }}</strong><small>Ordered {{ order.created_at.strftime('%d %b %Y') }}</small></div>
+          <span class="status-badge status-{{ order.order_status|lower|replace(' ', '-') }}">{{ order.order_status }}</span>
+        </div>
+        {% for item in order.order_items %}
+          {% set product = item.product %}
+          <div class="order-line">
+            {% if product and product.main_image %}<img src="{{ uploaded_url(product.main_image) }}" alt="{{ item.product_name }}" loading="lazy">{% else %}<img src="{{ url_for('static', filename='images/placeholder.svg') }}" alt="{{ item.product_name }}" loading="lazy">{% endif %}
+            <div><h2>{{ item.product_name }}</h2><p>Qty {{ item.quantity }} - {{ item.price|currency }}</p><small>{{ order.payment_method }} - {{ order.display_city or '' }}</small></div>
+          </div>
+        {% endfor %}
+        <div class="order-actions">
+          <a href="{{ url_for('user_order_invoice', order_id=order.id) }}">Invoice</a>
+          <a href="{{ url_for('user_order_detail', order_id=order.id) }}">Track Order</a>
+          <a href="{{ url_for('user_order_detail', order_id=order.id) }}">View Details</a>
+        </div>
+      </article>
+    {% else %}
+      <div class="empty-state"><h2>No orders yet</h2><a class="primary-action" href="{{ url_for('home') }}">Start shopping</a></div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

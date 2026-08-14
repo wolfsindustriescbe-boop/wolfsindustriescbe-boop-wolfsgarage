@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="product-detail-layout">
+    <div class="product-detail-image">
+      {% if product.main_image %}
+        <img src="{{ uploaded_url(product.main_image) }}" alt="{{ product.name }}" loading="lazy">
+      {% else %}
+        <img src="{{ url_for('static', filename='images/placeholder.svg') }}" alt="{{ product.name }}" loading="lazy">
+      {% endif %}
+    </div>
+    <div class="commerce-panel product-buybox">
+      <p class="eyebrow">{{ product.brand.name if product.brand else 'Wolfs Industries' }} - {{ product.category.name if product.category else 'Parts' }}</p>
+      <h1>{{ product.name }}</h1>
+      <p>{{ product.description }}</p>
+      <div class="price-row large">
+        <strong>{{ product_price|currency }}</strong>
+        {% if product.discount_price %}<del>{{ product.price|currency }}</del><span>{{ (product.price - product.discount_price)|currency }} off</span>{% endif %}
+      </div>
+      <p class="stock-line">{{ product.stock }} available - Database synced from admin catalog</p>
+      <form method="post" action="{{ url_for('cart_add', product_id=product.id) }}" class="buy-actions">
+        <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" aria-label="Quantity">
+        <button class="primary-action" {% if product.stock < 1 %}disabled{% endif %}>Add to Cart</button>
+      </form>
+      <form method="post" action="{{ url_for('wishlist_toggle', product_id=product.id) }}"><button class="ghost-button" type="submit">Toggle Wishlist</button></form>
+    </div>
+  </div>
+  <section class="commerce-panel">
+    <h2>Reviews</h2>
+    {% for review in product.reviews if review.status|lower == 'approved' %}
+      <article class="summary-row"><span><strong>{{ review.rating }}/5</strong> {{ review.review }}</span><small>{{ review.user.full_name if review.user else 'Customer' }}</small></article>
+    {% else %}
+      <p class="muted">No reviews yet.</p>
+    {% endfor %}
+  </section>
+</section>
+{% endblock %}

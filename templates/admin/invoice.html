@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% block title %}Invoice {{ order.order_number }}{% endblock %}
+{% block page_title %}Invoice {{ order.order_number }}{% endblock %}
+{% block content %}
+<section class="panel-card">
+  <div class="panel-header"><div><h4>Wolfs Industries Invoice</h4><p>{{ order.created_at.strftime('%d %b %Y') }}</p></div><strong>{{ order.order_status }}</strong></div>
+  <p>Customer: {{ order.display_customer_name or 'Customer' }}</p>
+  <p>Payment: {{ order.payment_method }} - {{ order.payment_status }}</p>
+  {% for item in order.order_items %}
+    <div class="compact-item"><span>{{ item.product_name }} x {{ item.quantity }}</span><strong>{{ (item.price * item.quantity)|currency }}</strong></div>
+  {% endfor %}
+  <div class="compact-item"><span>Subtotal</span><strong>{{ order.subtotal_value|currency }}</strong></div>
+  <div class="compact-item"><span>Discount</span><strong>-{{ order.discount_amount|currency }}</strong></div>
+  <div class="compact-item"><span>Delivery Fee</span><strong>{{ order.shipping_charge|currency }}</strong></div>
+  <div class="compact-item"><span>Total</span><strong>{{ order.total_amount|currency }}</strong></div>
+</section>
+{% endblock %}

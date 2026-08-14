@@ -1,0 +1,75 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Products | Wolfs Industries Admin{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<section class="panel-card">
+    <div class="panel-header">
+        <div>
+            <h4>Product Catalog</h4>
+            <p>{{ products_count }} products from PostgreSQL</p>
+        </div>
+        <a href="{{ url_for('admin_product_new') }}" class="primary-btn">Add Product</a>
+    </div>
+
+    <form method="get" class="table-tools">
+        <input name="q" value="{{ search }}" placeholder="Search name, SKU, slug">
+        <select name="status">
+            <option value="all">All status</option>
+            <option value="active" {% if status_filter=='active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if status_filter=='inactive' %}selected{% endif %}>Inactive</option>
+            <option value="featured" {% if status_filter=='featured' %}selected{% endif %}>Featured</option>
+        </select>
+        <button class="ghost-btn">Filter</button>
+    </form>
+
+    <div class="table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="admin-product-cell">
+                                {% if product.main_image %}
+                                    <img src="{{ uploaded_url(product.main_image) }}" alt="{{ product.name }}" loading="lazy">
+                                {% else %}
+                                    <img src="{{ url_for('static', filename='images/placeholder.svg') }}" alt="{{ product.name }}" loading="lazy">
+                                {% endif %}
+                                <span>{{ product.name }}<small>{{ product.sku }}</small></span>
+                            </div>
+                        </td>
+                        <td>{{ product.category.name if product.category else '-' }}</td>
+                        <td>{{ product.brand.name if product.brand else '-' }}</td>
+                        <td>{{ (product.discount_price or product.price)|currency }}</td>
+                        <td>{{ product.stock }}</td>
+                        <td>{{ 'Active' if product.is_active else 'Inactive' }}</td>
+                        <td>
+                            <a class="tool-pill" href="{{ url_for('admin_product_edit', product_id=product.id) }}">Edit</a>
+                            <form method="post" action="{{ url_for('admin_product_toggle', product_id=product.id) }}">
+                                <button class="tool-pill">Toggle</button>
+                            </form>
+                            <form method="post" action="{{ url_for('admin_product_delete', product_id=product.id) }}">
+                                <button class="tool-pill">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="7">No products found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

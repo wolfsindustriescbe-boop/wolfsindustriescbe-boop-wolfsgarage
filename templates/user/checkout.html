@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Checkout | Wolfs Industries{% endblock %}
+{% block content %}
+<section class="commerce-page">
+  <div class="commerce-heading">
+    <div>
+      <p class="eyebrow">Checkout</p>
+      <h1>Select delivery address</h1>
+    </div>
+    <a class="ghost-link" href="{{ url_for('cart') }}">Back to cart</a>
+  </div>
+
+  {% if cart_items %}
+    <div class="checkout-grid">
+      <div class="commerce-stack">
+        <section class="commerce-panel">
+          <h2>Saved Addresses</h2>
+          <form method="post" class="address-list">
+            {% for address in addresses %}
+              <label class="address-card">
+                <input type="radio" name="address_id" value="{{ address.id }}" {% if address.is_default or loop.first %}checked{% endif %}>
+                <span>
+                  <strong>{{ address.full_name }}</strong>
+                  <small>{{ address.phone }}</small>
+                  {{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}, {{ address.city }}, {{ address.state }} - {{ address.pincode }}
+                  {% if address.is_default %}<em>Default</em>{% endif %}
+                </span>
+              </label>
+            {% else %}
+              <p class="muted">Add an address to continue.</p>
+            {% endfor %}
+            <label class="coupon-row">Coupon
+              <input name="coupon" placeholder="Enter coupon code">
+            </label>
+            <button class="primary-action" type="submit" {% if not addresses %}disabled{% endif %}>Proceed to Payment</button>
+          </form>
+        </section>
+
+        <section class="commerce-panel">
+          <h2>Add New Address</h2>
+          <form method="post" action="{{ url_for('address_save') }}" class="form-grid">
+            <input name="full_name" placeholder="Full name" required>
+            <input name="phone" placeholder="Phone" required>
+            <input name="address_line1" placeholder="Address line 1" required>
+            <input name="address_line2" placeholder="Address line 2">
+            <input name="city" placeholder="City" required>
+            <input name="state" placeholder="State" required>
+            <input name="pincode" placeholder="Pincode" required>
+            <input name="country" value="India" required>
+            <label class="check-row"><input type="checkbox" name="is_default" checked> Set as default</label>
+            <button class="ghost-button" type="submit">Save Address</button>
+          </form>
+        </section>
+      </div>
+      <aside class="price-card">
+        <h2>Order Summary</h2>
+        <div><span>Items</span><strong>{{ cart_items|length }}</strong></div>
+        <div><span>Product Price</span><strong>{{ totals.product_total|currency }}</strong></div>
+        <div><span>Discount</span><strong class="success">-{{ totals.discount|currency }}</strong></div>
+        <div><span>Subtotal</span><strong>{{ totals.subtotal|currency }}</strong></div>
+        <div><span>Delivery Fee</span><strong>{{ totals.delivery_charge|delivery_display }}</strong></div>
+        <div class="grand-total"><span>Total Payable</span><strong>{{ totals.total|currency }}</strong></div>
+      </aside>
+    </div>
+  {% else %}
+    <div class="empty-state"><h2>Your cart is empty</h2><a class="primary-action" href="{{ url_for('home') }}">Continue shopping</a></div>
+  {% endif %}
+</section>
+{% endblock %}
