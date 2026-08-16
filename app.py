@@ -1120,15 +1120,22 @@ def uploaded_file(filename):
     normalized = upload_route_filename(filename)
 
     for file_path in uploaded_file_locations(normalized):
-        if file_path.is_file():
-            return send_from_directory(file_path.parent, file_path.name)
+        try:
+            if file_path.is_file() and file_path.stat().st_size > 0:
+                return send_from_directory(file_path.parent, file_path.name)
+        except Exception as e:
+            app.logger.warning("Error inspecting local upload file '%s': %s", file_path, e)
 
-    app.logger.error(
-        "Uploaded file not found for request '%s'. Normalized path '%s'. Checked %s",
+    app.logger.warning(
+        "Uploaded file missing or empty for request '%s'. Serving fallback placeholder. Normalized path: '%s'",
         filename,
         normalized,
-        [str(path) for path in uploaded_file_locations(normalized)],
     )
+    placeholder_dir = Path(app.root_path) / "static" / "images"
+    placeholder_file = placeholder_dir / "placeholder.svg"
+    if placeholder_file.is_file():
+        return send_from_directory(placeholder_dir, "placeholder.svg")
+
     raise NotFound()
 
 
