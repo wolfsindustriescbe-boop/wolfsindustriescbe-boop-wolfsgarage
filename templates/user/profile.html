@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Profile | Wolfs Industries{% endblock %}
+{% block meta_robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 {% block content %}
 <section class="commerce-page">
   <div class="commerce-heading"><div><p class="eyebrow">Profile</p><h1>{{ user.full_name }}</h1></div><a class="ghost-link" href="{{ url_for('auth.logout') }}">Logout</a></div>

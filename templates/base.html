@@ -8,6 +8,42 @@
 
     <title>{% block title %}Wolfs Industries{% endblock %}</title>
 
+    {% block meta_robots %}
+    <meta name="robots" content="index, follow">
+    {% endblock %}
+
+    {% block meta_description %}
+    <meta name="description" content="Wolfs Industries - Premium automotive parts, accessories, and performance upgrades for serious riders. Genuine products, fast shipping, and secure checkout.">
+    {% endblock %}
+
+    {% block canonical %}
+    <link rel="canonical" href="{{ canonical_url or (site_url + request.path) }}">
+    {% endblock %}
+
+    <!-- Open Graph Metadata -->
+    {% block og_tags %}
+    <meta property="og:site_name" content="Wolfs Industries">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}Wolfs Industries | Premium Auto Parts & Accessories{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Wolfs Industries - Premium automotive parts, accessories, and performance upgrades for serious riders.{% endblock %}">
+    <meta property="og:url" content="{{ canonical_url or (site_url + request.path) }}">
+    <meta property="og:image" content="{% block og_image %}{{ site_url }}{{ url_for('static', filename='images/placeholder.svg') }}{% endblock %}">
+    {% endblock %}
+
+    <!-- Twitter Card Metadata -->
+    {% block twitter_tags %}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Wolfs Industries | Premium Auto Parts & Accessories{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Wolfs Industries - Premium automotive parts, accessories, and performance upgrades for serious riders.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ site_url }}{{ url_for('static', filename='images/placeholder.svg') }}{% endblock %}">
+    {% endblock %}
+
+    {% block extra_meta %}{% endblock %}
+
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 

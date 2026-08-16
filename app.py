@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from flask import (
     Flask,
+    Response,
     flash,
     g,
     jsonify,
@@ -1026,7 +1027,87 @@ def inject_upload_helpers():
             return filename
         return url_for("uploaded_file", filename=upload_route_filename(filename))
 
-    return {"uploaded_url": uploaded_url}
+    base_url = app.config.get("SITE_URL", "https://wolfsindustries.in").rstrip("/")
+    return {
+        "uploaded_url": uploaded_url,
+        "site_url": base_url,
+    }
+
+
+@app.after_request
+def add_cache_headers(response):
+    if request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+# =====================================================
+# SEO & Sitemap Routes
+# =====================================================
+
+
+@app.route("/sitemap.xml", methods=["GET"])
+def sitemap():
+    base_url = app.config.get("SITE_URL", "https://wolfsindustries.in").rstrip("/")
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        '  <url>',
+        f'    <loc>{base_url}/home</loc>',
+        '    <changefreq>daily</changefreq>',
+        '    <priority>1.0</priority>',
+        '  </url>',
+    ]
+
+    try:
+        active_products = (
+            customer_product_queryset()
+            .order_by(Product.updated_at.desc(), Product.id.desc())
+            .all()
+        )
+        for product in active_products:
+            if product and product.slug:
+                lastmod_dt = product.updated_at or product.created_at
+                lastmod_str = lastmod_dt.strftime("%Y-%m-%d") if lastmod_dt else datetime.utcnow().strftime("%Y-%m-%d")
+                xml_lines.extend([
+                    '  <url>',
+                    f'    <loc>{base_url}/products/{product.slug}</loc>',
+                    f'    <lastmod>{lastmod_str}</lastmod>',
+                    '    <changefreq>weekly</changefreq>',
+                    '    <priority>0.8</priority>',
+                    '  </url>',
+                ])
+    except Exception as e:
+        app.logger.error("Error building dynamic sitemap: %s", e)
+
+    xml_lines.append('</urlset>')
+    return Response("\n".join(xml_lines), mimetype="application/xml; charset=utf-8")
+
+
+@app.route("/robots.txt", methods=["GET"])
+def robots():
+    base_url = app.config.get("SITE_URL", "https://wolfsindustries.in").rstrip("/")
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /cart",
+        "Disallow: /wishlist",
+        "Disallow: /dashboard",
+        "Disallow: /orders",
+        "Disallow: /orders/",
+        "Disallow: /profile",
+        "Disallow: /checkout",
+        "Disallow: /payment",
+        "Disallow: /cashfree/",
+        "Disallow: /place-order",
+        "Allow: /static/",
+        "Allow: /uploads/",
+        "Allow: /products/",
+        "Allow: /home",
+        "",
+        f"Sitemap: {base_url}/sitemap.xml",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain; charset=utf-8")
 
 
 # =====================================================

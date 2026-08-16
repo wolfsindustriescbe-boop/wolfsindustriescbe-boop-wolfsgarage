@@ -29,6 +29,7 @@ class Config:
     # Flask
     # ==========================
     SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret-key")
+    SITE_URL = os.getenv("SITE_URL", "https://wolfsindustries.in").rstrip("/")
 
     # ==========================
     # Database

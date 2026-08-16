@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 {% block title %}{{ product.name }} | Wolfs Industries{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="Buy {{ product.name }} at Wolfs Industries. {{ product.description|striptags|truncate(140) }}">
+{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ site_url }}/products/{{ product.slug }}">
+{% endblock %}
+
+{% block og_title %}{{ product.name }} | Wolfs Industries{% endblock %}
+{% block og_description %}{{ product.description|striptags|truncate(140) }}{% endblock %}
+{% block og_image %}{% if product.main_image %}{{ uploaded_url(product.main_image) }}{% else %}{{ site_url }}{{ url_for('static', filename='images/placeholder.svg') }}{% endif %}{% endblock %}
+
+{% block twitter_title %}{{ product.name }} | Wolfs Industries{% endblock %}
+{% block twitter_description %}{{ product.description|striptags|truncate(140) }}{% endblock %}
+{% block twitter_image %}{% if product.main_image %}{{ uploaded_url(product.main_image) }}{% else %}{{ site_url }}{{ url_for('static', filename='images/placeholder.svg') }}{% endif %}{% endblock %}
 {% block content %}
 <section class="commerce-page">
   <div class="product-detail-layout">
