@@ -30,12 +30,12 @@ class Config:
     # ==========================
     SECRET_KEY = os.getenv("SECRET_KEY", "change-this-secret-key")
     SITE_URL = os.getenv("SITE_URL", "https://wolfsindustries.in").rstrip("/")
+    PREFERRED_URL_SCHEME = "https"
 
     # ==========================
     # Database
     # ==========================
     SQLALCHEMY_DATABASE_URI = _database_uri()
-
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Optional SQLAlchemy engine settings

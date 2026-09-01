@@ -26,6 +26,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload, selectinload
 from werkzeug.security import generate_password_hash
 from werkzeug.exceptions import NotFound
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from database import db
@@ -59,6 +60,7 @@ from services.cashfree import (
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config.setdefault("UPLOAD_FOLDER", str(Path(app.root_path) / "uploads"))
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 
 # =====================================================
