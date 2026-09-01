@@ -1467,8 +1467,9 @@ def cashfree_create_session():
         app.logger.error("Pending Cashfree order/payment disappeared for user %s", user.id)
         return jsonify({"ok": False, "message": "Unable to start payment. Please try again."}), 500
 
-    return_url = url_for("cashfree_verify", _external=True) + "?order_id={order_id}"
-    notify_url = url_for("cashfree_webhook", _external=True)
+    base_url = (app.config.get("SITE_URL") or "https://wolfsindustries.in").rstrip("/")
+    return_url = f"{base_url}{url_for('cashfree_verify')}?order_id={{order_id}}"
+    notify_url = f"{base_url}{url_for('cashfree_webhook')}"
     cf_order_id = payment.gateway_order_id or order.order_number
     session_payload = None
 
