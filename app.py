@@ -1187,7 +1187,7 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def customer_login():
     if session.get("logged_in"):
-        return redirect(url_for("home"))
+        return redirect(url_for("profile"))
 
     active_tab = request.args.get("tab") or "signin"
 
@@ -1219,7 +1219,7 @@ def customer_login():
             merge_guest_user_data(guest_user_id, user.id)
 
         flash(f"Welcome back, {user.full_name}!", "success")
-        next_page = request.args.get("next") or url_for("home")
+        next_page = request.args.get("next") or url_for("profile")
         return redirect(next_page)
 
     return render_template("login.html", active_tab=active_tab)
@@ -1229,7 +1229,7 @@ def customer_login():
 @app.route("/register", methods=["GET", "POST"])
 def customer_signup():
     if session.get("logged_in"):
-        return redirect(url_for("home"))
+        return redirect(url_for("profile"))
 
     if request.method == "POST":
         full_name = (request.form.get("full_name") or "").strip()
@@ -1258,43 +1258,40 @@ def customer_signup():
             flash("Passwords do not match.", "danger")
             return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
 
-        existing_user = User.query.filter(User.email.ilike(email)).first()
-        if existing_user:
-            flash("An account with this email address already exists. Please sign in.", "warning")
-            return render_template("login.html", active_tab="signin", identifier=email)
+        try:
+            existing_user = User.query.filter(User.email.ilike(email)).first()
+            if existing_user:
+                flash("An account with this email address already exists. Please sign in.", "warning")
+                return render_template("login.html", active_tab="signin", identifier=email)
 
-        if phone:
-            existing_phone = User.query.filter(User.phone == phone).first()
-            if existing_phone:
-                flash("An account with this mobile number already exists.", "danger")
-                return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+            if phone:
+                existing_phone = User.query.filter(User.phone == phone).first()
+                if existing_phone:
+                    flash("An account with this mobile number already exists.", "danger")
+                    return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
 
-        new_user = User(
-            full_name=full_name,
-            email=email,
-            phone=phone or None,
-            is_active=True
-        )
-        new_user.set_password(password)
+            new_user = User(
+                full_name=full_name,
+                email=email,
+                phone=phone or None,
+                is_active=True
+            )
+            new_user.set_password(password)
 
-        db.session.add(new_user)
-        db.session.commit()
+            db.session.add(new_user)
+            db.session.commit()
 
-        guest_user_id = session.get("user_id")
+            flash("Account created successfully! Please sign in using your account credentials.", "success")
+            return redirect(url_for("customer_login", tab="signin", identifier=email))
 
-        session.clear()
-        session["user_id"] = new_user.id
-        session["user_name"] = new_user.full_name
-        session["user_email"] = new_user.email
-        session["logged_in"] = True
-
-        if guest_user_id and guest_user_id != new_user.id:
-            merge_guest_user_data(guest_user_id, new_user.id)
-
-        flash(f"Account created successfully! Welcome to Wolfs Industries, {new_user.full_name}.", "success")
-        return redirect(url_for("home"))
+        except Exception as e:
+            db.session.rollback()
+            logging.exception("Signup database error for email %s: %s", email, e)
+            flash("Unable to create account right now. Please check your details and try again.", "danger")
+            return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
 
     return render_template("login.html", active_tab="signup")
+
 
 
 @app.route("/logout")
