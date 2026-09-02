@@ -50,6 +50,49 @@ google = oauth.register(
 
 # =====================================================
 # Initialize OAuth
+
+from authlib.integrations.flask_client import OAuth
+
+from database import db
+from models.user import User
+from config import Config
+
+
+logger = logging.getLogger(__name__)
+
+
+# =====================================================
+# Blueprint
+# =====================================================
+
+auth_bp = Blueprint(
+    "auth",
+    __name__,
+    url_prefix="/auth"
+)
+
+
+# =====================================================
+# OAuth
+# =====================================================
+
+oauth = OAuth()
+
+google = oauth.register(
+    name="google",
+    client_id=Config.GOOGLE_CLIENT_ID,
+    client_secret=Config.GOOGLE_CLIENT_SECRET,
+    server_metadata_url=(
+        "https://accounts.google.com/.well-known/openid-configuration"
+    ),
+    client_kwargs={
+        "scope": "openid email profile"
+    }
+)
+
+
+# =====================================================
+# Initialize OAuth
 # =====================================================
 
 def init_oauth(app):
@@ -62,7 +105,11 @@ def init_oauth(app):
 
 @auth_bp.route("/login")
 def login():
-    return redirect(url_for("home"))
+    if not Config.GOOGLE_CLIENT_ID or not Config.GOOGLE_CLIENT_SECRET:
+        flash("Google Sign-In is not configured.", "warning")
+        return redirect(url_for("customer_login"))
+    redirect_uri = url_for("auth.callback", _external=True)
+    return google.authorize_redirect(redirect_uri)
 
 
 # =====================================================
@@ -96,7 +143,7 @@ def callback():
                 "danger"
             )
 
-            return redirect(url_for("home"))
+            return redirect(url_for("customer_login"))
 
         # =================================================
         # Find Existing User
@@ -128,17 +175,19 @@ def callback():
 
         else:
 
-            user.full_name = user_info.get("name")
-            user.google_id = user_info.get("sub")
-            user.profile_image = user_info.get("picture")
+            user.full_name = user_info.get("name") or user.full_name
+            user.google_id = user_info.get("sub") or user.google_id
+            user.profile_image = user_info.get("picture") or user.profile_image
             user.is_active = True
 
         # Save database changes
         db.session.commit()
 
         # =================================================
-        # Create Session
+        # Create Session & Merge Guest Cart/Wishlist
         # =================================================
+
+        guest_user_id = session.get("user_id")
 
         session.clear()
 
@@ -146,6 +195,13 @@ def callback():
         session["user_name"] = user.full_name
         session["user_email"] = user.email
         session["logged_in"] = True
+
+        if guest_user_id and guest_user_id != user.id:
+            try:
+                from app import merge_guest_user_data
+                merge_guest_user_data(guest_user_id, user.id)
+            except Exception:
+                logger.exception("Merge guest data failed during Google callback")
 
         flash(
             "Login Successful",
@@ -170,7 +226,7 @@ def callback():
         )
 
         return redirect(
-            url_for("home")
+            url_for("customer_login")
         )
 
 

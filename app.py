@@ -696,7 +696,7 @@ def reconcile_cashfree_order(cf_order_id, user_id=None, webhook_signature=None):
 
 
 def order_timeline(order):
-    statuses = ["Pending", "Confirmed", "Packed", "Shipped", "Out For Delivery", "Delivered"]
+    statuses = ["Pending", "Confirmed", "Processing", "Packed", "Shipped", "Out For Delivery", "Delivered"]
     current = (order.order_status or "Pending").lower()
     if current in {"cancelled", "canceled"}:
         return [{"label": status, "done": status == "Pending"} for status in statuses] + [{"label": "Cancelled", "done": True}]
@@ -705,6 +705,7 @@ def order_timeline(order):
     except ValueError:
         active_index = 0
     return [{"label": status, "done": index <= active_index} for index, status in enumerate(statuses)]
+
 
 
 def order_allows_review(order):
@@ -824,6 +825,38 @@ def merge_duplicate_cart_rows(user_id, product):
     for duplicate in rows[1:]:
         db.session.delete(duplicate)
     return keep
+
+
+def merge_guest_user_data(guest_user_id, authenticated_user_id):
+    if not guest_user_id or guest_user_id == authenticated_user_id:
+        return
+    try:
+        # Merge Cart Items
+        guest_cart_items = Cart.query.filter_by(user_id=guest_user_id).all()
+        for item in guest_cart_items:
+            existing = Cart.query.filter_by(user_id=authenticated_user_id, product_id=item.product_id).first()
+            if existing:
+                product = db.session.get(Product, item.product_id)
+                max_stock = product.stock if product else 99
+                existing.quantity = min(existing.quantity + item.quantity, max_stock)
+                db.session.delete(item)
+            else:
+                item.user_id = authenticated_user_id
+
+        # Merge Wishlist Items
+        guest_wishlist_items = Wishlist.query.filter_by(user_id=guest_user_id).all()
+        for item in guest_wishlist_items:
+            existing = Wishlist.query.filter_by(user_id=authenticated_user_id, product_id=item.product_id).first()
+            if existing:
+                db.session.delete(item)
+            else:
+                item.user_id = authenticated_user_id
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logging.exception("Error merging guest user data (%s -> %s): %s", guest_user_id, authenticated_user_id, e)
+
 
 
 def customer_product_queryset():
@@ -1147,8 +1180,130 @@ def uploaded_file(filename):
 
 
 @app.route("/")
-def login():
+def index():
     return redirect(url_for("home"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def customer_login():
+    if session.get("logged_in"):
+        return redirect(url_for("home"))
+
+    active_tab = request.args.get("tab") or "signin"
+
+    if request.method == "POST":
+        identifier = (request.form.get("identifier") or "").strip()
+        password = request.form.get("password") or ""
+
+        if not identifier or not password:
+            flash("Please enter your email or mobile number and password.", "danger")
+            return render_template("login.html", active_tab="signin", identifier=identifier)
+
+        user = User.query.filter(
+            or_(User.email.ilike(identifier), User.phone == identifier)
+        ).first()
+
+        if user is None or not user.check_password(password):
+            flash("Invalid email/mobile number or password.", "danger")
+            return render_template("login.html", active_tab="signin", identifier=identifier)
+
+        guest_user_id = session.get("user_id")
+
+        session.clear()
+        session["user_id"] = user.id
+        session["user_name"] = user.full_name
+        session["user_email"] = user.email
+        session["logged_in"] = True
+
+        if guest_user_id and guest_user_id != user.id:
+            merge_guest_user_data(guest_user_id, user.id)
+
+        flash(f"Welcome back, {user.full_name}!", "success")
+        next_page = request.args.get("next") or url_for("home")
+        return redirect(next_page)
+
+    return render_template("login.html", active_tab=active_tab)
+
+
+@app.route("/signup", methods=["GET", "POST"])
+@app.route("/register", methods=["GET", "POST"])
+def customer_signup():
+    if session.get("logged_in"):
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        full_name = (request.form.get("full_name") or "").strip()
+        email = (request.form.get("email") or "").strip().lower()
+        phone = (request.form.get("phone") or "").strip()
+        password = request.form.get("password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not all([full_name, email, password, confirm_password]):
+            flash("Please fill in all required fields.", "danger")
+            return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+
+        if "@" not in email or "." not in email:
+            flash("Please enter a valid email address.", "danger")
+            return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+
+        if phone and (len(phone) < 7 or len(phone) > 15):
+            flash("Please enter a valid mobile number.", "danger")
+            return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters long.", "danger")
+            return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+
+        existing_user = User.query.filter(User.email.ilike(email)).first()
+        if existing_user:
+            flash("An account with this email address already exists. Please sign in.", "warning")
+            return render_template("login.html", active_tab="signin", identifier=email)
+
+        if phone:
+            existing_phone = User.query.filter(User.phone == phone).first()
+            if existing_phone:
+                flash("An account with this mobile number already exists.", "danger")
+                return render_template("login.html", active_tab="signup", full_name=full_name, email=email, phone=phone)
+
+        new_user = User(
+            full_name=full_name,
+            email=email,
+            phone=phone or None,
+            is_active=True
+        )
+        new_user.set_password(password)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        guest_user_id = session.get("user_id")
+
+        session.clear()
+        session["user_id"] = new_user.id
+        session["user_name"] = new_user.full_name
+        session["user_email"] = new_user.email
+        session["logged_in"] = True
+
+        if guest_user_id and guest_user_id != new_user.id:
+            merge_guest_user_data(guest_user_id, new_user.id)
+
+        flash(f"Account created successfully! Welcome to Wolfs Industries, {new_user.full_name}.", "success")
+        return redirect(url_for("home"))
+
+    return render_template("login.html", active_tab="signup")
+
+
+@app.route("/logout")
+def customer_logout():
+    for key in ("user_id", "user_name", "user_email", "logged_in"):
+        session.pop(key, None)
+    flash("You have been logged out.", "success")
+    return redirect(url_for("home"))
+
 
 
 @app.route("/home")
@@ -1242,13 +1397,15 @@ def user_orders():
     return render_template("user/orders.html", orders=orders)
 
 
-@app.route("/orders/<int:order_id>")
+@app.route("/orders/<int:order_id>", endpoint="user_order_detail")
+@app.route("/orders/<int:order_id>/track", endpoint="user_order_track")
 def user_order_detail(order_id):
     if not require_customer_session():
-        return redirect(url_for("home"))
+        return redirect(url_for("customer_login"))
 
     order = get_order_queryset().filter(Order.id == order_id, Order.user_id == session["user_id"]).first_or_404()
     return render_template("user/order_detail.html", order=order, timeline=order_timeline(order))
+
 
 
 @app.route("/orders/<int:order_id>/invoice")
@@ -1305,6 +1462,47 @@ def profile_update():
     db.session.commit()
     flash("Profile updated.", "success")
     return redirect(url_for("profile"))
+
+
+@app.post("/change-password")
+def customer_change_password():
+    if not require_customer_session():
+        return redirect(url_for("home"))
+
+    user = get_current_user()
+    if not user:
+        flash("Invalid session.", "danger")
+        return redirect(url_for("customer_login"))
+
+    current_password = request.form.get("current_password") or ""
+    new_password = request.form.get("new_password") or ""
+    confirm_password = request.form.get("confirm_password") or ""
+
+    if user.password_hash:
+        if not current_password:
+            flash("Current password is required.", "danger")
+            return redirect(url_for("profile"))
+        if not user.check_password(current_password):
+            flash("Current password is incorrect.", "danger")
+            return redirect(url_for("profile"))
+
+    if not new_password or not confirm_password:
+        flash("New password and confirmation are required.", "danger")
+        return redirect(url_for("profile"))
+
+    if len(new_password) < 8:
+        flash("New password must be at least 8 characters long.", "danger")
+        return redirect(url_for("profile"))
+
+    if new_password != confirm_password:
+        flash("New passwords do not match.", "danger")
+        return redirect(url_for("profile"))
+
+    user.set_password(new_password)
+    db.session.commit()
+    flash("Password updated successfully.", "success")
+    return redirect(url_for("profile"))
+
 
 
 @app.post("/addresses/save")

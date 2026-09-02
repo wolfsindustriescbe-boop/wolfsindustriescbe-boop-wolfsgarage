@@ -5,13 +5,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Wolfs Industries | Login</title>
+    <title>Wolfs Industries | Account Login & Sign Up</title>
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <style>
+        .login-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--login-line);
+            padding-bottom: 12px;
+        }
+        .login-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--login-muted);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 180ms ease;
+        }
+        .login-tab-btn.active {
+            color: #ffffff;
+            background: rgba(225, 29, 46, 0.16);
+            border: 1px solid rgba(225, 29, 46, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 
 <body class="login-page">
@@ -49,8 +80,11 @@
 
                 <div class="login-form-side">
                     <span class="login-card-label">Customer Access</span>
-                    <h2>Welcome Back</h2>
-                    <p class="login-muted">Sign in to continue shopping</p>
+                    
+                    <div class="login-tabs">
+                        <button type="button" class="login-tab-btn {% if active_tab != 'signup' %}active{% endif %}" onclick="switchTab('signin')">Sign In</button>
+                        <button type="button" class="login-tab-btn {% if active_tab == 'signup' %}active{% endif %}" onclick="switchTab('signup')">Sign Up</button>
+                    </div>
 
                     <!-- Flash messages from server -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -72,27 +106,96 @@
                         {% endif %}
                     {% endwith %}
 
-                    <button
-                        type="button"
-                        onclick="window.location.href='{{ url_for('auth.login') }}'"
-                        class="login-google-btn">
-                        <img
-                            src="https://www.svgrepo.com/show/475656/google-color.svg"
-                            class="google-icon"
-                            alt="Google Logo">
-                        <span>Continue with Google</span>
-                    </button>
+                    <!-- SIGN IN FORM -->
+                    <div id="signin-tab" class="tab-content {% if active_tab != 'signup' %}active{% endif %}">
+                        <h2>Welcome Back</h2>
+                        <p class="login-muted">Sign in to continue shopping</p>
 
-                    <div class="login-divider">
-                        <em>OR</em>
+                        <form action="{{ url_for('customer_login') }}" method="POST" class="space-y-4">
+                            <div class="form-group">
+                                <label for="identifier">Email or Mobile Number</label>
+                                <input type="text" id="identifier" name="identifier" class="form-input" placeholder="Enter your email or phone" required value="{{ identifier|default('') }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" class="form-input" placeholder="Enter password" required>
+                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                <span>Sign In</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+
+                        <div class="login-divider">
+                            <em>OR</em>
+                        </div>
+
+                        <button
+                            type="button"
+                            onclick="window.location.href='{{ url_for('auth.login') }}'"
+                            class="login-google-btn">
+                            <img
+                                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                                class="google-icon"
+                                alt="Google Logo">
+                            <span>Continue with Google</span>
+                        </button>
                     </div>
 
-                    <a
-                        href="{{ url_for('admin_auth.login') }}"
-                        class="login-admin-link">
-                        <span>Admin Login</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    <!-- SIGN UP FORM -->
+                    <div id="signup-tab" class="tab-content {% if active_tab == 'signup' %}active{% endif %}">
+                        <h2>Create Account</h2>
+                        <p class="login-muted">Join Wolfs Industries today</p>
+
+                        <form action="{{ url_for('customer_signup') }}" method="POST" class="space-y-4">
+                            <div class="form-group">
+                                <label for="full_name">Full Name</label>
+                                <input type="text" id="full_name" name="full_name" class="form-input" placeholder="Enter your full name" required value="{{ full_name|default('') }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" class="form-input" placeholder="name@example.com" required value="{{ email|default('') }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Mobile Number</label>
+                                <input type="tel" id="phone" name="phone" class="form-input" placeholder="e.g. 9876543210" value="{{ phone|default('') }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reg_password">Password</label>
+                                <input type="password" id="reg_password" name="password" class="form-input" placeholder="At least 8 characters" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirm_password">Confirm Password</label>
+                                <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="Re-enter password" required>
+                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                <span>Create Account</span>
+                                <i class="fa-solid fa-user-plus"></i>
+                            </button>
+                        </form>
+
+                        <div class="login-divider">
+                            <em>OR</em>
+                        </div>
+
+                        <button
+                            type="button"
+                            onclick="window.location.href='{{ url_for('auth.login') }}'"
+                            class="login-google-btn">
+                            <img
+                                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                                class="google-icon"
+                                alt="Google Logo">
+                            <span>Sign up with Google</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -101,6 +204,21 @@
             </footer>
         </div>
     </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.login-tab-btn').forEach(el => el.classList.remove('active'));
+            
+            if (tabName === 'signup') {
+                document.getElementById('signup-tab').classList.add('active');
+                document.querySelectorAll('.login-tab-btn')[1].classList.add('active');
+            } else {
+                document.getElementById('signin-tab').classList.add('active');
+                document.querySelectorAll('.login-tab-btn')[0].classList.add('active');
+            }
+        }
+    </script>
 </body>
 
 </html>

@@ -14,7 +14,12 @@
       <a href="{{ url_for('wishlist') }}"><i class="fa-regular fa-heart"></i> <span>Wishlist</span></a>
       <a href="{{ url_for('cart') }}"><i class="fa-solid fa-cart-shopping"></i> <span>Cart</span></a>
       <a href="{{ url_for('user_orders') }}"><i class="fa-solid fa-box"></i> <span>Orders</span></a>
-      <a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> <span>Profile</span></a>
+      {% if session.get('logged_in') %}
+        <a href="{{ url_for('profile') }}"><i class="fa-solid fa-user"></i> <span>Profile</span></a>
+        <a href="{{ url_for('customer_logout') }}"><i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span></a>
+      {% else %}
+        <a href="{{ url_for('customer_login') }}"><i class="fa-solid fa-right-to-bracket"></i> <span>Sign In</span></a>
+      {% endif %}
     </div>
   </nav>
 </header>

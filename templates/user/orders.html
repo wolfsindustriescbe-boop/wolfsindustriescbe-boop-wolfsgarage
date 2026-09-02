@@ -20,7 +20,7 @@
         {% endfor %}
         <div class="order-actions">
           <a href="{{ url_for('user_order_invoice', order_id=order.id) }}">Invoice</a>
-          <a href="{{ url_for('user_order_detail', order_id=order.id) }}">Track Order</a>
+          <a href="{{ url_for('user_order_track', order_id=order.id) }}">Track Order</a>
           <a href="{{ url_for('user_order_detail', order_id=order.id) }}">View Details</a>
         </div>
       </article>
