@@ -60,18 +60,28 @@ from services.cashfree import (
 app = Flask(__name__)
 app.config.from_object(Config)
 app.config.setdefault("UPLOAD_FOLDER", str(Path(app.root_path) / "uploads"))
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
 
 # =====================================================
 # Session Configuration
 # =====================================================
 
+session_dir = os.path.join(app.root_path, "flask_session")
+try:
+    os.makedirs(session_dir, exist_ok=True)
+except Exception:
+    pass
+
 app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_FILE_DIR"] = session_dir
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 Session(app)
+
 
 
 # =====================================================
@@ -2991,10 +3001,14 @@ def health():
 def check_database():
     with app.app_context():
         try:
-            with db.engine.connect():
-                logging.info("PostgreSQL connected successfully.")
-        except Exception:
-            logging.exception("Database connection failed.")
+            with db.engine.connect() as conn:
+                if db.engine.name == "postgresql":
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
+                    conn.commit()
+                logging.info("PostgreSQL connected & schema verified successfully.")
+        except Exception as e:
+            logging.exception("Database verification info: %s", e)
+
 
 
 # =====================================================
