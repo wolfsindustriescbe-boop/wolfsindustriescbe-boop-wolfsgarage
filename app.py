@@ -2994,21 +2994,36 @@ def health():
 
 
 # =====================================================
-# Database Check
+# Database Check & Schema Auto-Migration
 # =====================================================
 
 
 def check_database():
     with app.app_context():
         try:
+            # 1. Run Flask-Migrate upgrade to sync Alembic migrations
+            try:
+                from flask_migrate import upgrade as _flask_migrate_upgrade
+                _flask_migrate_upgrade()
+                logging.info("Flask-Migrate database upgrade applied successfully.")
+            except Exception as migrate_err:
+                logging.warning("Flask-Migrate upgrade info: %s", migrate_err)
+
+            # 2. DDL safety fallback for PostgreSQL connection
             with db.engine.connect() as conn:
                 if db.engine.name == "postgresql":
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image VARCHAR(255);"))
+                    conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
                     conn.commit()
                 logging.info("PostgreSQL connected & schema verified successfully.")
         except Exception as e:
             logging.exception("Database verification info: %s", e)
 
+
+# Run database verification on module import (required for WSGI/Gunicorn in production)
+check_database()
 
 
 # =====================================================
@@ -3017,11 +3032,10 @@ def check_database():
 
 
 if __name__ == "__main__":
-    check_database()
-
     app.run(
         host="0.0.0.0",
         port=int(os.getenv("PORT", "5000")),
         debug=False,
         use_reloader=False,
     )
+
