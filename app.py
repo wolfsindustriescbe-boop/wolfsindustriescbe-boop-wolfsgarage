@@ -555,7 +555,7 @@ def parse_cashfree_datetime(value):
         if parsed.tzinfo is not None:
             return parsed.astimezone(timezone.utc).replace(tzinfo=None)
         return parsed
-    except ValueError:
+    except Exception:
         return datetime.utcnow()
 
 
@@ -603,6 +603,7 @@ def finalize_paid_cashfree_order(order, payment, cf_order, cf_payment):
     if (payment.payment_status or "").lower() == "paid" and (order.payment_status or "").lower() == "paid":
         return
 
+    cf_payment = cf_payment or {}
     cf_amount = cashfree_payment_amount(cf_payment) or money(cf_order.get("order_amount"))
     if cf_amount != money(payment.amount) or cf_amount != money(order.total_amount):
         raise ValueError("Cashfree paid amount does not match local order amount.")
@@ -657,6 +658,17 @@ def reconcile_cashfree_order(cf_order_id, user_id=None, webhook_signature=None):
             .first()
         )
         payment = order.payment if order and order.payment else None
+    if payment is None and "-" in cf_order_id:
+        parts = cf_order_id.split("-")
+        if len(parts) >= 4:
+            base_order_number = "-".join(parts[:4])
+            order = (
+                Order.query.options(joinedload(Order.payment), selectinload(Order.order_items))
+                .filter(Order.order_number == base_order_number, Order.payment_method == "Cashfree")
+                .with_for_update()
+                .first()
+            )
+            payment = order.payment if order and order.payment else None
     if payment is None or payment.order is None:
         return None, "not_found"
 
@@ -673,8 +685,11 @@ def reconcile_cashfree_order(cf_order_id, user_id=None, webhook_signature=None):
         payment.gateway_signature = webhook_signature
     payment.gateway_order_id = cf_order.get("order_id") or cf_order_id
 
-    if success_payment and str(cf_order.get("order_status", "")).upper() == "PAID":
-        finalize_paid_cashfree_order(order, payment, cf_order, success_payment)
+    cf_order_status = str(cf_order.get("order_status", "")).upper()
+    is_paid = cf_order_status == "PAID" or success_payment is not None
+
+    if is_paid:
+        finalize_paid_cashfree_order(order, payment, cf_order, success_payment or {})
         db.session.commit()
         return order, "paid"
 
@@ -684,23 +699,20 @@ def reconcile_cashfree_order(cf_order_id, user_id=None, webhook_signature=None):
         if gateway_payment_id:
             payment.gateway_payment_id = str(gateway_payment_id)
 
-    if latest_status == "FAILED":
+    if latest_status in {"FAILED", "DECLINED"} or cf_order_status in {"FAILED", "TERMINATED"}:
         payment.payment_status = "Failed"
         order.payment_status = "Failed"
-        order.order_status = "Pending"
         db.session.commit()
         return order, "failed"
 
-    if latest_status in {"USER_DROPPED", "CANCELLED", "VOID"}:
+    if latest_status in {"USER_DROPPED", "CANCELLED", "VOID"} or cf_order_status in {"EXPIRED", "CANCELLED"}:
         payment.payment_status = "Pending"
         order.payment_status = "Pending"
-        order.order_status = "Pending"
         db.session.commit()
         return order, "cancelled"
 
     payment.payment_status = "Pending"
     order.payment_status = "Pending"
-    order.order_status = "Pending"
     db.session.commit()
     return order, "pending"
 
@@ -1754,29 +1766,39 @@ def cashfree_verify():
     cf_order_id = (request.args.get("order_id") or "").strip()
     if not cf_order_id:
         flash("Unable to verify payment. Please try again.", "danger")
-        return redirect(url_for("orders"))
+        return redirect(url_for("user_orders"))
+
+    current_user_id = session.get("user_id")
 
     try:
-        order, status = reconcile_cashfree_order(cf_order_id, user_id=session["user_id"])
+        order, status = reconcile_cashfree_order(cf_order_id, user_id=current_user_id)
     except CashfreeConfigError:
         db.session.rollback()
         app.logger.exception("Cashfree credentials are missing during payment verification.")
         flash("Unable to verify payment. Please try again.", "danger")
-        return redirect(url_for("orders"))
-    except (CashfreeAPIError, ValueError):
+        return redirect(url_for("user_orders"))
+    except (CashfreeAPIError, ValueError) as exc:
         db.session.rollback()
-        app.logger.exception("Cashfree payment verification failed for order %s", cf_order_id)
-        flash("Unable to verify payment. Please try again.", "danger")
-        return redirect(url_for("orders"))
+        app.logger.exception("Cashfree payment verification API error for order %s: %s", cf_order_id, exc)
+        flash("Payment verification in progress. Please check your orders.", "warning")
+        return redirect(url_for("user_orders"))
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception("Unexpected error during payment verification for order %s: %s", cf_order_id, exc)
+        flash("Payment verification in progress. Please check your orders.", "warning")
+        return redirect(url_for("user_orders"))
 
     if order is None or status == "not_found":
         flash("Unable to find this payment.", "danger")
-        return redirect(url_for("orders"))
+        return redirect(url_for("user_orders"))
     if status == "forbidden":
+        if order and (order.payment_status or "").lower() == "paid":
+            flash("Order Confirmed! Thank you for your purchase.", "success")
+            return redirect(url_for("user_order_detail", order_id=order.id))
         flash("You do not have access to this payment.", "danger")
-        return redirect(url_for("orders"))
+        return redirect(url_for("user_orders"))
     if status == "paid":
-        flash("Order Confirmed", "success")
+        flash("Order Confirmed! Thank you for your purchase.", "success")
         return redirect(url_for("user_order_detail", order_id=order.id))
     if status == "failed":
         flash("Payment failed. Please retry payment.", "danger")
@@ -1786,7 +1808,7 @@ def cashfree_verify():
         return redirect(url_for("payment", address_id=order.address_id))
 
     flash("Payment is still being processed.", "warning")
-    return redirect(url_for("payment", address_id=order.address_id))
+    return redirect(url_for("user_order_detail", order_id=order.id))
 
 
 @app.post("/cashfree/webhook")
