@@ -1161,10 +1161,20 @@ def robots():
         "Allow: /uploads/",
         "Allow: /products/",
         "Allow: /home",
+        "Allow: /favicon.ico",
         "",
         f"Sitemap: {base_url}/sitemap.xml",
     ]
     return Response("\n".join(lines), mimetype="text/plain; charset=utf-8")
+
+
+@app.route("/favicon.ico", methods=["GET"])
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, "static"),
+        "favicon.ico",
+        mimetype="image/vnd.microsoft.icon",
+    )
 
 
 # =====================================================
@@ -3024,12 +3034,10 @@ def check_database():
     with app.app_context():
         try:
             # 1. Run Flask-Migrate upgrade to sync Alembic migrations
-            try:
-                from flask_migrate import upgrade as _flask_migrate_upgrade
-                _flask_migrate_upgrade()
-                logging.info("Flask-Migrate database upgrade applied successfully.")
-            except Exception as migrate_err:
-                logging.warning("Flask-Migrate upgrade info: %s", migrate_err)
+            from flask_migrate import upgrade as _flask_migrate_upgrade
+
+            _flask_migrate_upgrade()
+            logging.info("Flask-Migrate database upgrade applied successfully.")
 
             # 2. DDL safety fallback for PostgreSQL connection
             with db.engine.connect() as conn:
@@ -3041,7 +3049,8 @@ def check_database():
                     conn.commit()
                 logging.info("PostgreSQL connected & schema verified successfully.")
         except Exception as e:
-            logging.exception("Database verification info: %s", e)
+            logging.exception("Database migration/verification failed: %s", e)
+            raise
 
 
 # Run database verification on module import (required for WSGI/Gunicorn in production)

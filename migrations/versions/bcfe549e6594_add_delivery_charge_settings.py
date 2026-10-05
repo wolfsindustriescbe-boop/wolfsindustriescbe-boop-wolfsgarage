@@ -17,6 +17,7 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
     op.create_table('site_settings',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('key', sa.String(length=100), nullable=False),
@@ -26,28 +27,49 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('key')
     )
+    site_settings = sa.table(
+        'site_settings',
+        sa.column('key', sa.String(length=100)),
+        sa.column('value', sa.Numeric(precision=10, scale=2)),
+        sa.column('created_at', sa.DateTime()),
+        sa.column('updated_at', sa.DateTime()),
+    )
     op.execute(
-        """
-        INSERT INTO site_settings (key, value, created_at, updated_at)
-        VALUES ('delivery_charge', 0.00, NOW(), NOW())
-        """
+        site_settings.insert().values(
+            key='delivery_charge',
+            value=0.00,
+            created_at=sa.func.now(),
+            updated_at=sa.func.now(),
+        )
     )
 
     with op.batch_alter_table('orders', schema=None) as batch_op:
         batch_op.add_column(sa.Column('subtotal_amount', sa.Numeric(precision=10, scale=2), nullable=True))
 
-    op.execute(
-        """
-        UPDATE orders
-        SET subtotal_amount = item_totals.subtotal
-        FROM (
-            SELECT order_id, COALESCE(SUM(price * quantity), 0) AS subtotal
-            FROM order_items
-            GROUP BY order_id
-        ) AS item_totals
-        WHERE item_totals.order_id = orders.id
-        """
-    )
+    if bind.dialect.name == 'sqlite':
+        op.execute(
+            """
+            UPDATE orders
+            SET subtotal_amount = (
+                SELECT COALESCE(SUM(price * quantity), 0)
+                FROM order_items
+                WHERE order_items.order_id = orders.id
+            )
+            """
+        )
+    else:
+        op.execute(
+            """
+            UPDATE orders
+            SET subtotal_amount = item_totals.subtotal
+            FROM (
+                SELECT order_id, COALESCE(SUM(price * quantity), 0) AS subtotal
+                FROM order_items
+                GROUP BY order_id
+            ) AS item_totals
+            WHERE item_totals.order_id = orders.id
+            """
+        )
     op.execute("UPDATE orders SET subtotal_amount = 0.00 WHERE subtotal_amount IS NULL")
 
     with op.batch_alter_table('orders', schema=None) as batch_op:
