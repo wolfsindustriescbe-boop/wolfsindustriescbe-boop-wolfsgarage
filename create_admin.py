@@ -1,15 +1,16 @@
 import os
 
-from app import app
 from database import db
 from models.admin import Admin
+from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
 INITIAL_ADMIN_USERNAME = "admin"
+DEFAULT_ADMIN_EMAIL = "admin@wolfsgarage.com"
 
 
-def _initial_admin_password():
+def _initial_admin_password(required=True):
     password = os.getenv("ADMIN_PASSWORD")
     if password:
         return password
@@ -18,13 +19,18 @@ def _initial_admin_password():
     if admin_code:
         return admin_code
 
-    raise RuntimeError("Set ADMIN_PASSWORD or ADMIN_CODE before running create_admin.py.")
+    if required:
+        raise RuntimeError("Set ADMIN_PASSWORD or ADMIN_CODE before running create_admin.py.")
+    return None
 
 
-with app.app_context():
+def bootstrap_initial_admin(required_secret=True):
     username = INITIAL_ADMIN_USERNAME
-    email = os.getenv("ADMIN_EMAIL", "admin@wolfsgarage.com")
-    password = _initial_admin_password()
+    email = os.getenv("ADMIN_EMAIL", DEFAULT_ADMIN_EMAIL)
+    password = _initial_admin_password(required=required_secret)
+
+    if not password:
+        return "skipped"
 
     admin = Admin.query.filter_by(username=username).first()
 
@@ -42,21 +48,41 @@ with app.app_context():
 
         if changed:
             db.session.commit()
-            print("Admin updated successfully!")
-        else:
-            print("Admin already exists.")
-    else:
-        new_admin = Admin(
-            username=username,
-            email=email,
-            password=generate_password_hash(password),
-            is_active=True,
-        )
+            return "updated"
+        return "exists"
 
-        db.session.add(new_admin)
+    new_admin = Admin(
+        username=username,
+        email=email,
+        password=generate_password_hash(password),
+        is_active=True,
+    )
+
+    db.session.add(new_admin)
+    try:
         db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        admin = Admin.query.filter_by(username=username).first()
+        if admin:
+            return bootstrap_initial_admin(required_secret=required_secret)
+        raise
+    return "created"
 
-        print("Admin created successfully!")
-        print("--------------------------------")
-        print(f"Username : {username}")
-        print(f"Email    : {email}")
+
+def main():
+    from app import app
+
+    with app.app_context():
+        result = bootstrap_initial_admin(required_secret=True)
+        messages = {
+            "created": "Admin created successfully.",
+            "updated": "Admin updated successfully.",
+            "exists": "Admin already exists.",
+            "skipped": "Admin bootstrap skipped.",
+        }
+        print(messages[result])
+
+
+if __name__ == "__main__":
+    main()

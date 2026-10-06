@@ -3048,6 +3048,14 @@ def check_database():
                     conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
                     conn.commit()
                 logging.info("PostgreSQL connected & schema verified successfully.")
+
+            from create_admin import bootstrap_initial_admin
+
+            admin_bootstrap_result = bootstrap_initial_admin(required_secret=False)
+            if admin_bootstrap_result == "skipped":
+                logging.warning("Initial admin bootstrap skipped because no admin secret is configured.")
+            else:
+                logging.info("Initial admin bootstrap completed: %s.", admin_bootstrap_result)
         except Exception as e:
             logging.exception("Database migration/verification failed: %s", e)
             raise
