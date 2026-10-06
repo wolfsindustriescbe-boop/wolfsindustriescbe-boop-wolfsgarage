@@ -3,26 +3,54 @@ import os
 from app import app
 from database import db
 from models.admin import Admin
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
+
+
+INITIAL_ADMIN_USERNAME = "admin"
+
+
+def _initial_admin_password():
+    password = os.getenv("ADMIN_PASSWORD")
+    if password:
+        return password
+
+    admin_code = os.getenv("ADMIN_CODE")
+    if admin_code:
+        return admin_code
+
+    raise RuntimeError("Set ADMIN_PASSWORD or ADMIN_CODE before running create_admin.py.")
 
 
 with app.app_context():
-    username = os.getenv("ADMIN_USERNAME", "admin")
+    username = INITIAL_ADMIN_USERNAME
     email = os.getenv("ADMIN_EMAIL", "admin@wolfsgarage.com")
-    password = os.getenv("ADMIN_PASSWORD")
-
-    if not password:
-        raise RuntimeError("Set ADMIN_PASSWORD before running create_admin.py.")
+    password = _initial_admin_password()
 
     admin = Admin.query.filter_by(username=username).first()
 
     if admin:
-        print("Admin already exists.")
+        changed = False
+        if not check_password_hash(admin.password, password):
+            admin.password = generate_password_hash(password)
+            changed = True
+        if not admin.email:
+            admin.email = email
+            changed = True
+        if admin.is_active is not True:
+            admin.is_active = True
+            changed = True
+
+        if changed:
+            db.session.commit()
+            print("Admin updated successfully!")
+        else:
+            print("Admin already exists.")
     else:
         new_admin = Admin(
             username=username,
             email=email,
             password=generate_password_hash(password),
+            is_active=True,
         )
 
         db.session.add(new_admin)
